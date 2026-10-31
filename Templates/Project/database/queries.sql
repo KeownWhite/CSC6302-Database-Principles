@@ -1,0 +1,3 @@
+-- CSC6302 Database Principles
+-- Project:
+-- Purpose: Required and exploratory queries

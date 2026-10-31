@@ -1,0 +1,61 @@
+# =========================================================
+# CSC6302 Database Principles
+# Git Ignore
+# =========================================================
+
+# Java compiled files
+*.class
+*.jar
+*.war
+
+# Keep required course/project libraries
+!Java/lib/*.jar
+!Projects/**/java/lib/*.jar
+
+# Java build folders
+bin/
+build/
+target/
+out/
+
+# VS Code local/runtime files
+.vscode/*.log
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+
+# Database exports / backups
+*.dump
+*.bak
+*.sql.gz
+
+# Credentials / secrets
+.env
+.env.*
+credentials.*
+secrets.*
+*.pem
+*.key
+
+# MySQL local credential files
+.mylogin.cnf
+
+# Front-end dependencies if ever used
+node_modules/
+
+# Python cache if Python is used for analysis
+__pycache__/
+*.pyc
+
+# Scratch output
+Scratch/*
+!Scratch/.gitkeep

@@ -1,0 +1,41 @@
+{
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 1000,
+
+    "editor.formatOnSave": true,
+    "editor.wordWrap": "on",
+
+    "files.exclude": {
+        "**/.git": true
+    },
+
+    "java.configuration.updateBuildConfiguration": "interactive",
+
+    "cSpell.words": [
+        "CSC6302",
+        "MySQL",
+        "JDBC",
+        "Workbench",
+        "EER",
+        "superkey",
+        "superkeys"
+    ],
+
+    "[markdown]": {
+        "editor.wordWrap": "on",
+        "editor.formatOnSave": false
+    },
+
+    "[sql]": {
+        "editor.formatOnSave": false,
+        "editor.wordWrap": "off"
+    },
+
+    "[java]": {
+        "editor.formatOnSave": true
+    },
+
+    "[powershell]": {
+        "editor.formatOnSave": true
+    }
+}
