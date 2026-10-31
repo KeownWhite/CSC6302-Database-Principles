@@ -1,17 +1,40 @@
 # Project Requirements
 
-## Required Deliverables
+## Professor Requirements
 
-## Database Requirements
+- [ ] Exact prompt preserved
+- [ ] Database created
+- [ ] Tables created
+- [ ] Appropriate data types selected
+- [ ] Primary keys defined
+- [ ] Foreign keys defined where applicable
+- [ ] Integrity constraints implemented
+- [ ] CHECK constraints used where appropriate
+- [ ] ER diagram created in MySQL Workbench
+- [ ] Workbench relationships set to Connect to Columns
+- [ ] Sample tuples inserted
+- [ ] Required ALTER TABLE operations completed
+- [ ] Database tests completed
 
-## Java / JDBC Requirements
+## Application Requirements
 
-## Front-End Requirements
+- [ ] Java/Python version documented
+- [ ] OS version documented
+- [ ] MySQL version documented
+- [ ] README included
+- [ ] Application runs successfully
 
-## Documentation Requirements
+## Git Requirements
 
-## Testing Requirements
+- [ ] Git repository created
+- [ ] Instructor added as collaborator
+- [ ] Repository link submitted to Canvas
+- [ ] Code not uploaded directly to Canvas
 
-## Rubric
+## Optional Work
 
-Paste or summarize each graded requirement here without changing its meaning.
+### Front End
+
+### Extensions
+
+Optional work must not replace required project deliverables.
