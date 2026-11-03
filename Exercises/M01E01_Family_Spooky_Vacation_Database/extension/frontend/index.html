@@ -1,0 +1,2000 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Paranormal Expedition Mode
+    </title>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+            background: #0d0d0f;
+            color: #ededed;
+        }
+
+        .page {
+            width: min(
+                1400px,
+                calc(100% - 40px)
+            );
+            margin: 0 auto;
+            padding: 30px 0 70px;
+        }
+
+        h1,
+        h2,
+        h3 {
+            margin-top: 0;
+        }
+
+        h1 {
+            margin-bottom: 6px;
+        }
+
+        .subtitle {
+            color: #9d9da8;
+            margin-bottom: 28px;
+        }
+
+        .panel {
+            background: #17171b;
+            border: 1px solid #35353d;
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns:
+                repeat(
+                    auto-fit,
+                    minmax(
+                        180px,
+                        1fr
+                    )
+                );
+            gap: 12px;
+        }
+
+        .card {
+            background: #222228;
+            border: 1px solid #3b3b44;
+            border-radius: 8px;
+            padding: 14px;
+        }
+
+        .card strong {
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns:
+                repeat(
+                    auto-fit,
+                    minmax(
+                        290px,
+                        1fr
+                    )
+                );
+            gap: 16px;
+        }
+
+        .action-card {
+            background: #202025;
+            border: 1px solid #3c3c46;
+            border-radius: 9px;
+            padding: 16px;
+        }
+
+        .action-card h3 {
+            margin-bottom: 14px;
+        }
+
+        label {
+            display: block;
+            margin-top: 11px;
+            margin-bottom: 5px;
+            color: #bebec7;
+        }
+
+        select,
+        button {
+            width: 100%;
+            min-height: 40px;
+            border-radius: 6px;
+            border: 1px solid #4b4b56;
+            font-size: 14px;
+        }
+
+        select {
+            background: #101014;
+            color: #ededed;
+            padding: 8px;
+        }
+
+        button {
+            background: #34343e;
+            color: #ffffff;
+            cursor: pointer;
+            margin-top: 14px;
+            padding: 8px 12px;
+        }
+
+        button:hover {
+            background: #454552;
+        }
+
+        button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .danger-button {
+            background: #55252b;
+        }
+
+        .danger-button:hover {
+            background: #6e3038;
+        }
+
+        .advance-button {
+            min-height: 55px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .status-message {
+            display: none;
+            padding: 12px 14px;
+            margin-bottom: 20px;
+            border-radius: 7px;
+        }
+
+        .status-message.success {
+            display: block;
+            background: #17321e;
+            border: 1px solid #2d6339;
+        }
+
+        .status-message.error {
+            display: block;
+            background: #3b191c;
+            border: 1px solid #7d343a;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 9px 8px;
+            border-bottom: 1px solid #36363f;
+        }
+
+        th {
+            color: #b8b8c2;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        .score {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .muted {
+            color: #9b9ba5;
+        }
+
+        .game-over {
+            border-color: #754048;
+        }
+
+        .toolbar {
+            display: grid;
+            grid-template-columns:
+                1fr
+                1fr;
+            gap: 12px;
+        }
+
+        @media (
+            max-width: 650px
+        ) {
+
+            .page {
+                width:
+                    calc(
+                        100% - 24px
+                    );
+            }
+
+            .toolbar {
+                grid-template-columns:
+                    1fr;
+            }
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="page">
+
+    <h1>
+        Family Spooky Vacation Database
+    </h1>
+
+    <div class="subtitle">
+        Paranormal Expedition Mode
+    </div>
+
+
+    <div
+        id="message"
+        class="status-message"
+    ></div>
+
+
+    <section class="panel">
+
+        <h2>
+            Expedition Status
+        </h2>
+
+        <div
+            id="session"
+            class="grid"
+        >
+            Loading...
+        </div>
+
+    </section>
+
+
+    <section class="panel">
+
+        <h2>
+            Players
+        </h2>
+
+        <div
+            id="players"
+            class="grid"
+        ></div>
+
+    </section>
+
+
+    <section class="panel">
+
+        <h2>
+            Game Controls
+        </h2>
+
+        <div class="actions">
+
+
+            <div class="action-card">
+
+                <h3>
+                    Record Activity
+                </h3>
+
+                <label for="activityPlayer">
+                    Player
+                </label>
+
+                <select
+                    id="activityPlayer"
+                ></select>
+
+
+                <label for="activitySite">
+                    Site
+                </label>
+
+                <select
+                    id="activitySite"
+                ></select>
+
+
+                <label for="activityChoice">
+                    Activity
+                </label>
+
+                <select
+                    id="activityChoice"
+                ></select>
+
+
+                <button
+                    id="recordActivityButton"
+                    type="button"
+                >
+                    Record Activity
+                </button>
+
+            </div>
+
+
+            <div class="action-card">
+
+                <h3>
+                    Record Contact
+                </h3>
+
+                <label for="contactPlayerA">
+                    Player A
+                </label>
+
+                <select
+                    id="contactPlayerA"
+                ></select>
+
+
+                <label for="contactPlayerB">
+                    Player B
+                </label>
+
+                <select
+                    id="contactPlayerB"
+                ></select>
+
+
+                <label for="contactSite">
+                    Site
+                </label>
+
+                <select
+                    id="contactSite"
+                ></select>
+
+
+                <button
+                    id="recordContactButton"
+                    type="button"
+                >
+                    Record Contact
+                </button>
+
+            </div>
+
+
+            <div class="action-card">
+
+                <h3>
+                    Investigate for Clue
+                </h3>
+
+                <label for="investigator">
+                    Investigator
+                </label>
+
+                <select
+                    id="investigator"
+                ></select>
+
+
+                <button
+                    id="investigateButton"
+                    type="button"
+                >
+                    Investigate
+                </button>
+
+            </div>
+
+
+            <div class="action-card">
+
+                <h3>
+                    Make Accusation
+                </h3>
+
+                <label for="accuser">
+                    Accuser
+                </label>
+
+                <select
+                    id="accuser"
+                ></select>
+
+
+                <label for="accused">
+                    Accused Player
+                </label>
+
+                <select
+                    id="accused"
+                ></select>
+
+
+                <button
+                    id="accuseButton"
+                    class="danger-button"
+                    type="button"
+                >
+                    Submit Accusation
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div
+            class="toolbar"
+            style="margin-top: 16px;"
+        >
+
+            <button
+                id="advanceButton"
+                class="advance-button"
+                type="button"
+            >
+                Advance Turn
+            </button>
+
+            <button
+                id="refreshButton"
+                class="advance-button"
+                type="button"
+            >
+                Refresh Dashboard
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <section class="panel">
+
+        <h2>
+            Current Activities
+        </h2>
+
+        <div
+            id="activities"
+            class="table-wrapper"
+        >
+            Loading...
+        </div>
+
+    </section>
+
+
+    <section class="panel">
+
+        <h2>
+            Contact History
+        </h2>
+
+        <div
+            id="contacts"
+            class="table-wrapper"
+        >
+            Loading...
+        </div>
+
+    </section>
+
+
+    <section class="panel">
+
+        <h2>
+            Discovered Evidence
+        </h2>
+
+        <div
+            id="clues"
+            class="table-wrapper"
+        >
+            Loading...
+        </div>
+
+    </section>
+
+
+    <section class="panel">
+
+        <h2>
+            Accusations
+        </h2>
+
+        <div id="accusations">
+            Loading...
+        </div>
+
+    </section>
+
+</div>
+
+
+<script>
+
+const SESSION_ID = 1;
+
+let dashboardData = null;
+let optionData = null;
+
+
+// ============================================================
+// INITIAL LOAD
+// ============================================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    async () => {
+
+        bindButtons();
+
+        await loadAll();
+    }
+);
+
+
+// ============================================================
+// BUTTON EVENTS
+// ============================================================
+
+function bindButtons() {
+
+    document
+        .getElementById(
+            "recordActivityButton"
+        )
+        .addEventListener(
+            "click",
+            recordActivity
+        );
+
+
+    document
+        .getElementById(
+            "recordContactButton"
+        )
+        .addEventListener(
+            "click",
+            recordContact
+        );
+
+
+    document
+        .getElementById(
+            "investigateButton"
+        )
+        .addEventListener(
+            "click",
+            investigate
+        );
+
+
+    document
+        .getElementById(
+            "accuseButton"
+        )
+        .addEventListener(
+            "click",
+            accusePlayer
+        );
+
+
+    document
+        .getElementById(
+            "advanceButton"
+        )
+        .addEventListener(
+            "click",
+            advanceTurn
+        );
+
+
+    document
+        .getElementById(
+            "refreshButton"
+        )
+        .addEventListener(
+            "click",
+            loadAll
+        );
+
+
+    document
+        .getElementById(
+            "activitySite"
+        )
+        .addEventListener(
+            "change",
+            updateActivityChoices
+        );
+}
+
+
+// ============================================================
+// LOAD EVERYTHING
+// ============================================================
+
+async function loadAll() {
+
+    try {
+
+        clearMessage();
+
+        const [
+            dashboardResponse,
+            optionsResponse
+        ] =
+            await Promise.all([
+                fetch(
+                    `/api/dashboard?session=${SESSION_ID}`
+                ),
+                fetch(
+                    `/api/options?session=${SESSION_ID}`
+                )
+            ]);
+
+
+        const dashboard =
+            await dashboardResponse.json();
+
+        const options =
+            await optionsResponse.json();
+
+
+        if (!dashboardResponse.ok) {
+
+            throw new Error(
+                dashboard.message
+                || "Dashboard request failed."
+            );
+        }
+
+
+        if (!optionsResponse.ok) {
+
+            throw new Error(
+                options.message
+                || "Options request failed."
+            );
+        }
+
+
+        dashboardData =
+            dashboard;
+
+        optionData =
+            options;
+
+
+        renderDashboard();
+
+        populateControls();
+
+        updateControlState();
+
+
+    } catch (error) {
+
+        showMessage(
+            error.message,
+            true
+        );
+    }
+}
+
+
+// ============================================================
+// RENDER DASHBOARD
+// ============================================================
+
+function renderDashboard() {
+
+    renderSession(
+        dashboardData.session
+    );
+
+    renderPlayers(
+        dashboardData.players
+    );
+
+    renderActivities(
+        dashboardData.activities
+    );
+
+    renderContacts(
+        dashboardData.contacts
+    );
+
+    renderClues(
+        dashboardData.clues
+    );
+
+    renderAccusations(
+        dashboardData.accusations
+    );
+}
+
+
+// ============================================================
+// SESSION
+// ============================================================
+
+function renderSession(session) {
+
+    const container =
+        document.getElementById(
+            "session"
+        );
+
+
+    container.innerHTML = `
+
+        <div class="card">
+
+            <strong>
+                Session
+            </strong>
+
+            <div>
+                ${session.sessionId}
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <strong>
+                Turn
+            </strong>
+
+            <div>
+                ${session.currentTurn} / 12
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <strong>
+                Status
+            </strong>
+
+            <div>
+                ${escapeHtml(
+                    session.gameStatus
+                )}
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <strong>
+                Players
+            </strong>
+
+            <div>
+                ${session.playerCount}
+            </div>
+
+        </div>
+    `;
+
+
+    const panel =
+        container.closest(
+            ".panel"
+        );
+
+
+    if (
+        session.gameStatus
+        !== "ACTIVE"
+    ) {
+
+        panel.classList.add(
+            "game-over"
+        );
+
+    } else {
+
+        panel.classList.remove(
+            "game-over"
+        );
+    }
+}
+
+
+// ============================================================
+// PLAYERS
+// ============================================================
+
+function renderPlayers(players) {
+
+    const container =
+        document.getElementById(
+            "players"
+        );
+
+    container.innerHTML = "";
+
+
+    for (
+        const player
+        of players
+    ) {
+
+        container.innerHTML += `
+
+            <div class="card">
+
+                <strong>
+                    ${escapeHtml(
+                        player.name
+                    )}
+                </strong>
+
+                <div>
+                    ${escapeHtml(
+                        player.status
+                    )}
+                </div>
+
+                <div
+                    class="score"
+                    style="margin-top: 10px;"
+                >
+                    ${player.score}
+                </div>
+
+                <div class="muted">
+                    points
+                </div>
+
+            </div>
+        `;
+    }
+}
+
+
+// ============================================================
+// ACTIVITIES
+// ============================================================
+
+function renderActivities(
+    activities
+) {
+
+    const container =
+        document.getElementById(
+            "activities"
+        );
+
+
+    if (
+        activities.length === 0
+    ) {
+
+        container.innerHTML =
+            `<p class="muted">
+                No activities recorded this turn.
+             </p>`;
+
+        return;
+    }
+
+
+    let html = `
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Player</th>
+                    <th>Site</th>
+                    <th>Activity</th>
+                    <th>Category</th>
+                </tr>
+            </thead>
+
+            <tbody>
+    `;
+
+
+    for (
+        const activity
+        of activities
+    ) {
+
+        html += `
+
+            <tr>
+
+                <td>
+                    ${escapeHtml(
+                        activity.player
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        activity.site
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        activity.activity
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        activity.category
+                    )}
+                </td>
+
+            </tr>
+        `;
+    }
+
+
+    html += `
+
+            </tbody>
+
+        </table>
+    `;
+
+
+    container.innerHTML =
+        html;
+}
+
+
+// ============================================================
+// CONTACTS
+// ============================================================
+
+function renderContacts(
+    contacts
+) {
+
+    const container =
+        document.getElementById(
+            "contacts"
+        );
+
+
+    if (
+        contacts.length === 0
+    ) {
+
+        container.innerHTML =
+            `<p class="muted">
+                No contacts recorded.
+             </p>`;
+
+        return;
+    }
+
+
+    let html = `
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Turn</th>
+                    <th>Player A</th>
+                    <th>Player B</th>
+                    <th>Site</th>
+                </tr>
+            </thead>
+
+            <tbody>
+    `;
+
+
+    for (
+        const contact
+        of contacts
+    ) {
+
+        html += `
+
+            <tr>
+
+                <td>
+                    ${contact.turn}
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        contact.playerA
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        contact.playerB
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        contact.site
+                    )}
+                </td>
+
+            </tr>
+        `;
+    }
+
+
+    html += `
+
+            </tbody>
+
+        </table>
+    `;
+
+
+    container.innerHTML =
+        html;
+}
+
+
+// ============================================================
+// CLUES
+// ============================================================
+
+function renderClues(
+    clues
+) {
+
+    const container =
+        document.getElementById(
+            "clues"
+        );
+
+
+    if (
+        clues.length === 0
+    ) {
+
+        container.innerHTML =
+            `<p class="muted">
+                No evidence discovered.
+             </p>`;
+
+        return;
+    }
+
+
+    let html = `
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Observer</th>
+                    <th>Affected Player</th>
+                    <th>Clue</th>
+                    <th>Appeared</th>
+                    <th>Found</th>
+                    <th>Delay</th>
+                    <th>Points</th>
+                    <th>Severity</th>
+                </tr>
+            </thead>
+
+            <tbody>
+    `;
+
+
+    for (
+        const clue
+        of clues
+    ) {
+
+        html += `
+
+            <tr>
+
+                <td>
+                    ${escapeHtml(
+                        clue.observer
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        clue.affectedPlayer
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        humanizeClue(
+                            clue.symptom
+                        )
+                    )}
+                </td>
+
+                <td>
+                    ${clue.appearanceTurn}
+                </td>
+
+                <td>
+                    ${clue.discoveredTurn}
+                </td>
+
+                <td>
+                    ${clue.detectionDelay}
+                </td>
+
+                <td>
+                    ${clue.points}
+                </td>
+
+                <td>
+                    ${clue.severity}
+                </td>
+
+            </tr>
+        `;
+    }
+
+
+    html += `
+
+            </tbody>
+
+        </table>
+    `;
+
+
+    container.innerHTML =
+        html;
+}
+
+
+// ============================================================
+// ACCUSATIONS
+// ============================================================
+
+function renderAccusations(
+    accusations
+) {
+
+    document
+        .getElementById(
+            "accusations"
+        )
+        .innerHTML = `
+
+            <div class="grid">
+
+                <div class="card">
+
+                    <strong>
+                        Total Accusations
+                    </strong>
+
+                    <div>
+                        ${accusations.total}
+                    </div>
+
+                </div>
+
+
+                <div class="card">
+
+                    <strong>
+                        Wrong Accusations
+                    </strong>
+
+                    <div>
+                        ${accusations.wrong} / 3
+                    </div>
+
+                </div>
+
+            </div>
+        `;
+}
+
+
+// ============================================================
+// POPULATE CONTROLS
+// ============================================================
+
+function populateControls() {
+
+    const players =
+        optionData.players;
+
+    const sites =
+        optionData.sites;
+
+
+    populatePlayerSelect(
+        "activityPlayer",
+        players
+    );
+
+    populatePlayerSelect(
+        "contactPlayerA",
+        players
+    );
+
+    populatePlayerSelect(
+        "contactPlayerB",
+        players
+    );
+
+    populatePlayerSelect(
+        "investigator",
+        players
+    );
+
+    populatePlayerSelect(
+        "accuser",
+        players
+    );
+
+    populatePlayerSelect(
+        "accused",
+        players
+    );
+
+
+    populateSiteSelect(
+        "activitySite",
+        sites
+    );
+
+    populateSiteSelect(
+        "contactSite",
+        sites
+    );
+
+
+    updateActivityChoices();
+}
+
+
+// ============================================================
+// PLAYER SELECT
+// ============================================================
+
+function populatePlayerSelect(
+    elementId,
+    players
+) {
+
+    const select =
+        document.getElementById(
+            elementId
+        );
+
+    const oldValue =
+        select.value;
+
+    select.innerHTML = "";
+
+
+    for (
+        const player
+        of players
+    ) {
+
+        const option =
+            document.createElement(
+                "option"
+            );
+
+        option.value =
+            player.memberId;
+
+        option.textContent =
+            `${player.name} (${player.status})`;
+
+
+        if (
+            player.status
+            === "REMOVED"
+        ) {
+
+            option.disabled =
+                true;
+        }
+
+
+        select.appendChild(
+            option
+        );
+    }
+
+
+    if (
+        [...select.options]
+            .some(
+                option =>
+                    option.value === oldValue
+            )
+    ) {
+
+        select.value =
+            oldValue;
+    }
+}
+
+
+// ============================================================
+// SITE SELECT
+// ============================================================
+
+function populateSiteSelect(
+    elementId,
+    sites
+) {
+
+    const select =
+        document.getElementById(
+            elementId
+        );
+
+    const oldValue =
+        select.value;
+
+    select.innerHTML = "";
+
+
+    for (
+        const site
+        of sites
+    ) {
+
+        const option =
+            document.createElement(
+                "option"
+            );
+
+        option.value =
+            site.siteId;
+
+        option.textContent =
+            site.name;
+
+        select.appendChild(
+            option
+        );
+    }
+
+
+    if (
+        [...select.options]
+            .some(
+                option =>
+                    option.value === oldValue
+            )
+    ) {
+
+        select.value =
+            oldValue;
+    }
+}
+
+
+// ============================================================
+// ACTIVITY OPTIONS BASED ON SITE
+// ============================================================
+
+function updateActivityChoices() {
+
+    const siteId =
+        Number(
+            document
+                .getElementById(
+                    "activitySite"
+                )
+                .value
+        );
+
+
+    const select =
+        document.getElementById(
+            "activityChoice"
+        );
+
+
+    select.innerHTML = "";
+
+
+    const activities =
+        optionData.siteActivities
+            .filter(
+                item =>
+                    item.siteId
+                    === siteId
+            );
+
+
+    for (
+        const activity
+        of activities
+    ) {
+
+        const option =
+            document.createElement(
+                "option"
+            );
+
+        option.value =
+            activity.activityId;
+
+        option.textContent =
+            activity.activityName;
+
+        select.appendChild(
+            option
+        );
+    }
+}
+
+
+// ============================================================
+// RECORD ACTIVITY
+// ============================================================
+
+async function recordActivity() {
+
+    const member =
+        valueOf(
+            "activityPlayer"
+        );
+
+    const site =
+        valueOf(
+            "activitySite"
+        );
+
+    const activity =
+        valueOf(
+            "activityChoice"
+        );
+
+
+    await postAction(
+        "/api/activity",
+        {
+            session:
+                SESSION_ID,
+
+            member:
+                member,
+
+            site:
+                site,
+
+            activity:
+                activity
+        }
+    );
+}
+
+
+// ============================================================
+// RECORD CONTACT
+// ============================================================
+
+async function recordContact() {
+
+    const playerA =
+        valueOf(
+            "contactPlayerA"
+        );
+
+    const playerB =
+        valueOf(
+            "contactPlayerB"
+        );
+
+    const site =
+        valueOf(
+            "contactSite"
+        );
+
+
+    if (
+        playerA === playerB
+    ) {
+
+        showMessage(
+            "Player A and Player B must be different.",
+            true
+        );
+
+        return;
+    }
+
+
+    await postAction(
+        "/api/contact",
+        {
+            session:
+                SESSION_ID,
+
+            playerA:
+                playerA,
+
+            playerB:
+                playerB,
+
+            site:
+                site
+        }
+    );
+}
+
+
+// ============================================================
+// INVESTIGATE
+// ============================================================
+
+async function investigate() {
+
+    const observer =
+        valueOf(
+            "investigator"
+        );
+
+
+    await postAction(
+        "/api/investigate",
+        {
+            session:
+                SESSION_ID,
+
+            observer:
+                observer
+        }
+    );
+}
+
+
+// ============================================================
+// ACCUSE
+// ============================================================
+
+async function accusePlayer() {
+
+    const accuser =
+        valueOf(
+            "accuser"
+        );
+
+    const accused =
+        valueOf(
+            "accused"
+        );
+
+
+    if (
+        accuser === accused
+    ) {
+
+        showMessage(
+            "A player cannot accuse themselves.",
+            true
+        );
+
+        return;
+    }
+
+
+    const accusedName =
+        selectedText(
+            "accused"
+        );
+
+
+    const confirmed =
+        window.confirm(
+            `Accuse ${accusedName} of being Patient Zero?`
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    await postAction(
+        "/api/accuse",
+        {
+            session:
+                SESSION_ID,
+
+            accuser:
+                accuser,
+
+            accused:
+                accused
+        }
+    );
+}
+
+
+// ============================================================
+// ADVANCE TURN
+// ============================================================
+
+async function advanceTurn() {
+
+    const currentTurn =
+        dashboardData
+            .session
+            .currentTurn;
+
+
+    const confirmed =
+        window.confirm(
+            `Advance from Turn ${currentTurn}?`
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    await postAction(
+        "/api/advance",
+        {
+            session:
+                SESSION_ID
+        }
+    );
+}
+
+
+// ============================================================
+// GENERIC POST
+// ============================================================
+
+async function postAction(
+    url,
+    data
+) {
+
+    try {
+
+        setButtonsDisabled(
+            true
+        );
+
+
+        const body =
+            new URLSearchParams();
+
+
+        for (
+            const [
+                key,
+                value
+            ]
+            of Object.entries(
+                data
+            )
+        ) {
+
+            body.append(
+                key,
+                value
+            );
+        }
+
+
+        const response =
+            await fetch(
+                url,
+                {
+                    method:
+                        "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/x-www-form-urlencoded"
+                    },
+
+                    body:
+                        body.toString()
+                }
+            );
+
+
+        const result =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                result.message
+                || "Game action failed."
+            );
+        }
+
+
+        showMessage(
+            result.message,
+            false
+        );
+
+
+        await loadAll();
+
+
+    } catch (error) {
+
+        showMessage(
+            error.message,
+            true
+        );
+
+
+    } finally {
+
+        updateControlState();
+    }
+}
+
+
+// ============================================================
+// CONTROL ENABLE / DISABLE
+// ============================================================
+
+function updateControlState() {
+
+    if (!dashboardData) {
+        return;
+    }
+
+
+    const active =
+        dashboardData
+            .session
+            .gameStatus
+        === "ACTIVE";
+
+
+    setButtonsDisabled(
+        !active
+    );
+}
+
+
+function setButtonsDisabled(
+    disabled
+) {
+
+    const ids = [
+        "recordActivityButton",
+        "recordContactButton",
+        "investigateButton",
+        "accuseButton",
+        "advanceButton"
+    ];
+
+
+    for (
+        const id
+        of ids
+    ) {
+
+        document
+            .getElementById(
+                id
+            )
+            .disabled =
+                disabled;
+    }
+}
+
+
+// ============================================================
+// SMALL HELPERS
+// ============================================================
+
+function valueOf(
+    id
+) {
+
+    return document
+        .getElementById(
+            id
+        )
+        .value;
+}
+
+
+function selectedText(
+    id
+) {
+
+    const select =
+        document.getElementById(
+            id
+        );
+
+    return select.options[
+        select.selectedIndex
+    ].textContent;
+}
+
+
+function showMessage(
+    message,
+    error
+) {
+
+    const element =
+        document.getElementById(
+            "message"
+        );
+
+
+    element.textContent =
+        message;
+
+
+    element.className =
+        error
+            ? "status-message error"
+            : "status-message success";
+}
+
+
+function clearMessage() {
+
+    const element =
+        document.getElementById(
+            "message"
+        );
+
+    element.textContent =
+        "";
+
+    element.className =
+        "status-message";
+}
+
+
+// ============================================================
+// HUMAN-READABLE CLUE NAMES
+// ============================================================
+
+function humanizeClue(
+    symptomCode
+) {
+
+    const clueNames = {
+
+        STATIC_VISION:
+            "Visual Static",
+
+        COLD_FLASH:
+            "Sudden Cold Flash",
+
+        MEMORY_SKIP:
+            "Memory Lapse",
+
+        SHADOW_FLICKER:
+            "Flickering Shadow",
+
+        AUDIO_DISTORTION:
+            "Distorted Audio"
+
+    };
+
+
+    if (
+        clueNames[
+            symptomCode
+        ]
+    ) {
+
+        return clueNames[
+            symptomCode
+        ];
+    }
+
+
+    return String(
+        symptomCode ?? ""
+    )
+        .toLowerCase()
+        .replaceAll(
+            "_",
+            " "
+        )
+        .replace(
+            /\b\w/g,
+            letter =>
+                letter.toUpperCase()
+        );
+}
+
+
+function escapeHtml(
+    value
+) {
+
+    return String(
+        value ?? ""
+    )
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+        .replaceAll(
+            "\"",
+            "&quot;"
+        )
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
+}
+
+</script>
+
+</body>
+
+</html>
