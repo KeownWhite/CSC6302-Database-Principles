@@ -99,7 +99,9 @@ CREATE TABLE IF NOT EXISTS Expedition (
 
     CONSTRAINT fk_expedition_location
         FOREIGN KEY (location_id)
-        REFERENCES Location(location_id),
+        REFERENCES Location(location_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
 
     CONSTRAINT chk_expedition_status
         CHECK (
@@ -134,11 +136,15 @@ CREATE TABLE IF NOT EXISTS ExpeditionInvestigator (
 
     CONSTRAINT fk_ei_expedition
         FOREIGN KEY (expedition_id)
-        REFERENCES Expedition(expedition_id),
+        REFERENCES Expedition(expedition_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
 
     CONSTRAINT fk_ei_investigator
         FOREIGN KEY (investigator_id)
-        REFERENCES Investigator(investigator_id),
+        REFERENCES Investigator(investigator_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
 
     CONSTRAINT chk_ei_hours
         CHECK (hours_assigned >= 0)
@@ -162,11 +168,15 @@ CREATE TABLE IF NOT EXISTS ExpeditionEquipment (
 
     CONSTRAINT fk_ee_expedition
         FOREIGN KEY (expedition_id)
-        REFERENCES Expedition(expedition_id),
+        REFERENCES Expedition(expedition_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
 
     CONSTRAINT fk_ee_equipment
         FOREIGN KEY (equipment_id)
-        REFERENCES Equipment(equipment_id),
+        REFERENCES Equipment(equipment_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
 
     CONSTRAINT chk_equipment_return
         CHECK (
@@ -196,15 +206,21 @@ CREATE TABLE IF NOT EXISTS Evidence (
 
     CONSTRAINT fk_evidence_expedition
         FOREIGN KEY (expedition_id)
-        REFERENCES Expedition(expedition_id),
+        REFERENCES Expedition(expedition_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
 
     CONSTRAINT fk_evidence_investigator
         FOREIGN KEY (investigator_id)
-        REFERENCES Investigator(investigator_id),
+        REFERENCES Investigator(investigator_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
 
     CONSTRAINT fk_evidence_equipment
         FOREIGN KEY (equipment_id)
-        REFERENCES Equipment(equipment_id),
+        REFERENCES Equipment(equipment_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
 
     CONSTRAINT chk_evidence_credibility
         CHECK (
