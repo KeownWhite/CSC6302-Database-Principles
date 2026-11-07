@@ -1,27 +1,10 @@
 -- CSC6302 Database Principles
--- Module 2 Practice
--- Holiday Planner
---
--- Recreates the practice database from a known clean state.
+-- Module 2 Practice: Holiday Planner
+-- Database and table creation script
 
 DROP DATABASE IF EXISTS HolidayPlanner;
-
 CREATE DATABASE HolidayPlanner;
-
 USE HolidayPlanner;
-
--- CSC6302 Database Principles
--- Module 2 Practice: Holiday Planner
--- Final corrected schema
---
--- Run after 01_create_database.sql.
-
-USE HolidayPlanner;
-
-
--- =========================================================
--- 1. FAMILY MEMBER
--- =========================================================
 
 CREATE TABLE IF NOT EXISTS FamilyMember (
     member_id INT UNSIGNED AUTO_INCREMENT,

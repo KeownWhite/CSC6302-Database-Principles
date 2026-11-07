@@ -1,17 +1,10 @@
 -- CSC6302 Database Principles
 -- Module 2 Practice: Holiday Planner
--- Final corrected realistic sample data
+-- Realistic sample data
 --
--- Run after:
---   01_create_database.sql
---   02_create_tables.sql
+-- Run after HolidayPlanner_Create.sql
 
 USE HolidayPlanner;
-
-
--- =========================================================
--- 1. FAMILY MEMBERS
--- =========================================================
 
 INSERT INTO FamilyMember (
     first_name,
