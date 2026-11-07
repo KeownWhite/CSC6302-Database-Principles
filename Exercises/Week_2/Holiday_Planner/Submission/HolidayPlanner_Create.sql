@@ -1,10 +1,27 @@
 -- CSC6302 Database Principles
--- Module 2 Practice: Holiday Planner
--- Database and table creation script
+-- Module 2 Practice
+-- Holiday Planner
+--
+-- Recreates the practice database from a known clean state.
 
 DROP DATABASE IF EXISTS HolidayPlanner;
+
 CREATE DATABASE HolidayPlanner;
+
 USE HolidayPlanner;
+
+-- CSC6302 Database Principles
+-- Module 2 Practice: Holiday Planner
+-- Final corrected schema
+--
+-- Run after 01_create_database.sql.
+
+USE HolidayPlanner;
+
+
+-- =========================================================
+-- 1. FAMILY MEMBER
+-- =========================================================
 
 CREATE TABLE IF NOT EXISTS FamilyMember (
     member_id INT UNSIGNED AUTO_INCREMENT,
@@ -24,7 +41,10 @@ CREATE TABLE IF NOT EXISTS FamilyMember (
         CHECK (
             relationship_to_household IN (
                 'Parent',
-                'Child'
+                'Child',
+                'Guardian',
+                'Grandparent',
+                'Other'
             )
         )
 );
@@ -67,7 +87,6 @@ CREATE TABLE IF NOT EXISTS TripType (
 
 -- =========================================================
 -- 3. HOLIDAY
--- Controlled holiday vocabulary instead of free text.
 -- =========================================================
 
 CREATE TABLE IF NOT EXISTS Holiday (
@@ -248,7 +267,10 @@ CREATE TABLE IF NOT EXISTS Accommodation (
             accommodation_type IN (
                 'Hotel',
                 'Lodge',
-                'Cabin'
+                'Cabin',
+                'Resort',
+                'Rental',
+                'Other'
             )
         )
 );
@@ -300,12 +322,9 @@ CREATE TABLE IF NOT EXISTS Outing (
 -- =========================================================
 -- 10. OUTING PARTICIPANT
 --
--- Delete policy:
--- Historical outing participation is preserved with RESTRICT
--- when deleting a FamilyMember.
---
--- Packing rules later use CASCADE because those rows are
--- preferences owned by the member rather than trip history.
+-- Historical participation uses RESTRICT when deleting a
+-- FamilyMember. Packing preferences later use CASCADE
+-- because they belong to the member rather than trip history.
 -- =========================================================
 
 CREATE TABLE IF NOT EXISTS OutingParticipant (
@@ -388,8 +407,7 @@ CREATE TABLE IF NOT EXISTS OutingActivity (
 
 -- =========================================================
 -- 12. TRAVEL LEG
--- estimated_cost_total_usd is the total estimated cost
--- associated with the entire family travel leg.
+-- Cost means total estimated USD cost for the family leg.
 -- =========================================================
 
 CREATE TABLE IF NOT EXISTS TravelLeg (
@@ -449,7 +467,6 @@ CREATE TABLE IF NOT EXISTS TravelLeg (
 
 -- =========================================================
 -- 13. OUTING ACCOMMODATION
--- nightly_rate_usd explicitly identifies the currency.
 -- =========================================================
 
 CREATE TABLE IF NOT EXISTS OutingAccommodation (
@@ -489,9 +506,6 @@ CREATE TABLE IF NOT EXISTS OutingAccommodation (
 
 -- =========================================================
 -- 14. MEMBER TRIP PACKING ITEM
---
--- TripType packing may use Personal Item or Suitcase.
--- Suitcase eligibility is additionally enforced by trigger.
 -- =========================================================
 
 CREATE TABLE IF NOT EXISTS MemberTripPackingItem (
@@ -541,9 +555,6 @@ CREATE TABLE IF NOT EXISTS MemberTripPackingItem (
 
 -- =========================================================
 -- 15. MEMBER TRAVEL PACKING ITEM
---
--- Travel-mode-specific rules may use Personal Item or
--- Vehicle. Travel rules never assign items to Suitcase.
 -- =========================================================
 
 CREATE TABLE IF NOT EXISTS MemberTravelPackingItem (
@@ -630,11 +641,28 @@ CREATE TABLE IF NOT EXISTS ActivityPackingItem (
 
 
 -- =========================================================
--- TRIGGER 1-2
--- Enforce Outing duration against the selected TripType.
+-- TRIGGERS
 -- =========================================================
 
+DROP TRIGGER IF EXISTS bi_outing_validate_duration;
+DROP TRIGGER IF EXISTS bu_outing_validate_duration;
+DROP TRIGGER IF EXISTS bi_oa_validate_schedule;
+DROP TRIGGER IF EXISTS bu_oa_validate_schedule;
+DROP TRIGGER IF EXISTS bi_outacc_validate_dates;
+DROP TRIGGER IF EXISTS bu_outacc_validate_dates;
+DROP TRIGGER IF EXISTS bi_mtp_validate_packing;
+DROP TRIGGER IF EXISTS bu_mtp_validate_packing;
+DROP TRIGGER IF EXISTS bi_mvp_validate_packing;
+DROP TRIGGER IF EXISTS bu_mvp_validate_packing;
+
+
 DELIMITER $$
+
+
+-- ---------------------------------------------------------
+-- Outing INSERT:
+-- enforce TripType duration.
+-- ---------------------------------------------------------
 
 CREATE TRIGGER bi_outing_validate_duration
 BEFORE INSERT ON Outing
@@ -663,16 +691,29 @@ BEGIN
 END$$
 
 
+-- ---------------------------------------------------------
+-- Outing UPDATE:
+-- enforce duration and prevent child rows from being
+-- stranded outside a changed date range.
+-- ---------------------------------------------------------
+
 CREATE TRIGGER bu_outing_validate_duration
 BEFORE UPDATE ON Outing
 FOR EACH ROW
 BEGIN
     DECLARE v_min_days TINYINT UNSIGNED;
     DECLARE v_max_days TINYINT UNSIGNED;
+    DECLARE v_max_activities TINYINT UNSIGNED;
     DECLARE v_trip_days INT;
 
-    SELECT min_days, max_days
-    INTO v_min_days, v_max_days
+    SELECT
+        min_days,
+        max_days,
+        max_activities_per_day
+    INTO
+        v_min_days,
+        v_max_days,
+        v_max_activities
     FROM TripType
     WHERE trip_type_id = NEW.trip_type_id;
 
@@ -687,13 +728,225 @@ BEGIN
                 'Outing duration does not match the selected TripType';
 
     END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM OutingActivity oa
+        WHERE oa.outing_id = OLD.outing_id
+          AND (
+              oa.activity_date < NEW.start_date
+              OR oa.activity_date > NEW.end_date
+          )
+    ) THEN
+
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT =
+                'Outing date change would leave activities outside the Outing';
+
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM OutingAccommodation x
+        WHERE x.outing_id = OLD.outing_id
+          AND (
+              x.check_in_date < NEW.start_date
+              OR x.check_out_date > NEW.end_date
+          )
+    ) THEN
+
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT =
+                'Outing date change would leave accommodation outside the Outing';
+
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM (
+            SELECT
+                activity_date,
+                COUNT(*) AS activity_count
+            FROM OutingActivity
+            WHERE outing_id = OLD.outing_id
+            GROUP BY activity_date
+        ) counts_by_day
+        WHERE counts_by_day.activity_count > v_max_activities
+    ) THEN
+
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT =
+                'Existing activities exceed the selected TripType daily maximum';
+
+    END IF;
 END$$
 
 
--- =========================================================
--- TRIGGER 3-4
--- Enforce suitcase eligibility and cross-table bag rules.
--- =========================================================
+-- ---------------------------------------------------------
+-- OutingActivity INSERT:
+-- enforce parent dates and TripType daily maximum.
+-- ---------------------------------------------------------
+
+CREATE TRIGGER bi_oa_validate_schedule
+BEFORE INSERT ON OutingActivity
+FOR EACH ROW
+BEGIN
+    DECLARE v_start_date DATE;
+    DECLARE v_end_date DATE;
+    DECLARE v_max_activities TINYINT UNSIGNED;
+    DECLARE v_activity_count INT;
+
+    SELECT
+        o.start_date,
+        o.end_date,
+        tt.max_activities_per_day
+    INTO
+        v_start_date,
+        v_end_date,
+        v_max_activities
+    FROM Outing o
+    JOIN TripType tt
+        ON tt.trip_type_id = o.trip_type_id
+    WHERE o.outing_id = NEW.outing_id;
+
+    IF NEW.activity_date < v_start_date
+       OR NEW.activity_date > v_end_date THEN
+
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT =
+                'Activity date must fall within the Outing date range';
+
+    END IF;
+
+    SELECT COUNT(*)
+    INTO v_activity_count
+    FROM OutingActivity
+    WHERE outing_id = NEW.outing_id
+      AND activity_date = NEW.activity_date;
+
+    IF v_activity_count >= v_max_activities THEN
+
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT =
+                'Activity count would exceed the TripType daily maximum';
+
+    END IF;
+END$$
+
+
+-- ---------------------------------------------------------
+-- OutingActivity UPDATE.
+-- ---------------------------------------------------------
+
+CREATE TRIGGER bu_oa_validate_schedule
+BEFORE UPDATE ON OutingActivity
+FOR EACH ROW
+BEGIN
+    DECLARE v_start_date DATE;
+    DECLARE v_end_date DATE;
+    DECLARE v_max_activities TINYINT UNSIGNED;
+    DECLARE v_activity_count INT;
+
+    SELECT
+        o.start_date,
+        o.end_date,
+        tt.max_activities_per_day
+    INTO
+        v_start_date,
+        v_end_date,
+        v_max_activities
+    FROM Outing o
+    JOIN TripType tt
+        ON tt.trip_type_id = o.trip_type_id
+    WHERE o.outing_id = NEW.outing_id;
+
+    IF NEW.activity_date < v_start_date
+       OR NEW.activity_date > v_end_date THEN
+
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT =
+                'Activity date must fall within the Outing date range';
+
+    END IF;
+
+    SELECT COUNT(*)
+    INTO v_activity_count
+    FROM OutingActivity oa
+    WHERE oa.outing_id = NEW.outing_id
+      AND oa.activity_date = NEW.activity_date
+      AND NOT (
+          oa.outing_id = OLD.outing_id
+          AND oa.activity_date = OLD.activity_date
+          AND oa.sequence_number = OLD.sequence_number
+      );
+
+    IF v_activity_count >= v_max_activities THEN
+
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT =
+                'Activity count would exceed the TripType daily maximum';
+
+    END IF;
+END$$
+
+
+-- ---------------------------------------------------------
+-- OutingAccommodation INSERT.
+-- ---------------------------------------------------------
+
+CREATE TRIGGER bi_outacc_validate_dates
+BEFORE INSERT ON OutingAccommodation
+FOR EACH ROW
+BEGIN
+    DECLARE v_start_date DATE;
+    DECLARE v_end_date DATE;
+
+    SELECT start_date, end_date
+    INTO v_start_date, v_end_date
+    FROM Outing
+    WHERE outing_id = NEW.outing_id;
+
+    IF NEW.check_in_date < v_start_date
+       OR NEW.check_out_date > v_end_date THEN
+
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT =
+                'Accommodation dates must fall within the Outing date range';
+
+    END IF;
+END$$
+
+
+-- ---------------------------------------------------------
+-- OutingAccommodation UPDATE.
+-- ---------------------------------------------------------
+
+CREATE TRIGGER bu_outacc_validate_dates
+BEFORE UPDATE ON OutingAccommodation
+FOR EACH ROW
+BEGIN
+    DECLARE v_start_date DATE;
+    DECLARE v_end_date DATE;
+
+    SELECT start_date, end_date
+    INTO v_start_date, v_end_date
+    FROM Outing
+    WHERE outing_id = NEW.outing_id;
+
+    IF NEW.check_in_date < v_start_date
+       OR NEW.check_out_date > v_end_date THEN
+
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT =
+                'Accommodation dates must fall within the Outing date range';
+
+    END IF;
+END$$
+
+
+-- ---------------------------------------------------------
+-- MemberTripPackingItem INSERT.
+-- ---------------------------------------------------------
 
 CREATE TRIGGER bi_mtp_validate_packing
 BEFORE INSERT ON MemberTripPackingItem
@@ -731,6 +984,10 @@ BEGIN
 END$$
 
 
+-- ---------------------------------------------------------
+-- MemberTripPackingItem UPDATE.
+-- ---------------------------------------------------------
+
 CREATE TRIGGER bu_mtp_validate_packing
 BEFORE UPDATE ON MemberTripPackingItem
 FOR EACH ROW
@@ -767,10 +1024,9 @@ BEGIN
 END$$
 
 
--- =========================================================
--- TRIGGER 5-6
--- Enforce cross-table bag consistency from travel rules.
--- =========================================================
+-- ---------------------------------------------------------
+-- MemberTravelPackingItem INSERT.
+-- ---------------------------------------------------------
 
 CREATE TRIGGER bi_mvp_validate_packing
 BEFORE INSERT ON MemberTravelPackingItem
@@ -793,6 +1049,10 @@ BEGIN
 END$$
 
 
+-- ---------------------------------------------------------
+-- MemberTravelPackingItem UPDATE.
+-- ---------------------------------------------------------
+
 CREATE TRIGGER bu_mvp_validate_packing
 BEFORE UPDATE ON MemberTravelPackingItem
 FOR EACH ROW
@@ -812,5 +1072,6 @@ BEGIN
 
     END IF;
 END$$
+
 
 DELIMITER ;
