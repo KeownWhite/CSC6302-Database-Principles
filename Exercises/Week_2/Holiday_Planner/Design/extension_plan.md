@@ -197,7 +197,7 @@ The design follows the same general relational pattern used in the professor's e
 1. Distinct concepts are represented by separate relations.
 2. Many-to-many relationships are resolved through junction relations.
 3. Foreign keys maintain referential integrity.
-4. Foreign-key updates and deletes will use cascading actions.
+4. Foreign-key referential actions will be selected according to relationship lifecycle, data-history requirements, and MySQL constraint compatibility.
 5. Surrogate numeric identifiers may be used where they provide a stable identifier.
 6. Composite primary keys will be used for appropriate junction relations.
 7. Nullable attributes will be used only when the value may legitimately not exist.
