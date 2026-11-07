@@ -82,23 +82,38 @@ Planned scheduling attributes include:
 
 This allows both a single afternoon activity and a multi-day itinerary to use the same relational structure.
 
+### TravelMode
+
+Stores reusable transportation modes.
+
+Initial values include:
+
+- Car
+- Plane
+- Train
+- Bus
+- Other
+
 ### Travel
 
-Stores the transportation plan for an outing.
+Stores individual transportation legs for an outing.
 
-Planned information includes:
+Each travel leg references a TravelMode and records information such as:
 
-- travel mode
+- origin
+- destination
 - duration
 - price
 
-Supported modes initially include Car and Plane.
-
 ### Accommodation
 
-Stores lodging information for overnight outings.
+Stores reusable lodging-property information such as hotels, cabins, resorts, and rental properties.
 
-Short day trips do not require an accommodation record.
+### OutingAccommodation
+
+Associates an outing with an accommodation and stores booking-specific information such as check-in date, check-out date, nightly rate, and booking reference.
+
+Short day trips do not require an OutingAccommodation record.
 
 ### PackingItem
 
@@ -126,6 +141,21 @@ The relation will also identify whether an item belongs in:
 - Personal Item
 - Suitcase
 
+### MemberTravelPackingItem
+
+Defines additional packing items associated with a family member and a transportation mode.
+
+This relation supplements rather than replaces MemberTripPackingItem.
+
+For example:
+
+- Plane -> travel documents
+- Plane -> carry-on charger
+- Car -> road snacks
+- Car -> vehicle emergency supplies
+
+This separation prevents ordinary Weekend or Week Long packing rules from being repeated once for every transportation mode.
+
 ### ActivityPackingItem
 
 Defines items required or recommended for a particular activity.
@@ -144,12 +174,18 @@ Outing N:1 Location
 Outing M:N Activity
 resolved through OutingActivity
 
+TravelMode 1:N Travel
+
 Outing 1:N Travel
 
-Outing 1:N Accommodation
+Outing M:N Accommodation
+resolved through OutingAccommodation
 
 FamilyMember M:N PackingItem for a TripType
 resolved through MemberTripPackingItem
+
+FamilyMember M:N PackingItem for a TravelMode
+resolved through MemberTravelPackingItem
 
 Activity M:N PackingItem
 resolved through ActivityPackingItem
@@ -169,4 +205,4 @@ The design follows the same general relational pattern used in the professor's e
 
 ## Next Design Step
 
-Define every attribute, domain, primary key, foreign key, nullability rule, and constraint for the twelve proposed relations before writing SQL.
+Define every attribute, domain, primary key, foreign key, nullability rule, and constraint for the fifteen proposed relations before writing SQL.
