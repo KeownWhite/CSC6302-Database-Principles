@@ -93,8 +93,6 @@ VALUES
 
 -- =========================================================
 -- 5. LOCATIONS
--- Boston Logan removed because the Boston scenario is now
--- a road trip and no record references that airport.
 -- =========================================================
 
 INSERT INTO Location (
@@ -1116,8 +1114,3 @@ HAVING COUNT(oa.activity_id) < tt.min_activities_per_day
 ORDER BY od.outing_id, od.activity_date;
 
 
--- Boston Logan should not remain as unused data.
-
-SELECT *
-FROM Location
-WHERE location_name = 'Boston Logan International Airport';
