@@ -1,20 +1,25 @@
 -- CSC6302 Database Principles
--- Module 2 Practice
--- Holiday Planner Sample Data
+-- Module 2 Practice: Holiday Planner
+-- Corrected realistic sample data
 --
 -- Run after:
--- 01_create_database.sql
--- 02_create_tables.sql
+--   01_create_database.sql
+--   02_create_tables.sql
 
 USE HolidayPlanner;
 
 
 -- =========================================================
--- 1. FAMILY MEMBERS
+-- FAMILY MEMBERS
 -- =========================================================
 
-INSERT INTO FamilyMember
-(first_name, middle_name, last_name, birth_date, relationship_to_household)
+INSERT INTO FamilyMember (
+    first_name,
+    middle_name,
+    last_name,
+    birth_date,
+    relationship_to_household
+)
 VALUES
 ('Jordan', NULL, 'Hart', '1988-04-12', 'Parent'),
 ('Taylor', 'Marie', 'Hart', '1990-09-21', 'Parent'),
@@ -23,38 +28,89 @@ VALUES
 
 
 -- =========================================================
--- 2. TRIP TYPES
+-- TRIP TYPES
+-- The one-day trip types are now structurally different.
 -- =========================================================
 
-INSERT INTO TripType
-(trip_type_name, min_days, max_days, description)
+INSERT INTO TripType (
+    trip_type_name,
+    min_days,
+    max_days,
+    min_activities_per_day,
+    max_activities_per_day,
+    description
+)
 VALUES
-('Single Afternoon', 1, 1, 'One-day outing centered on a small number of activities'),
-('Multi-Activity Day', 1, 1, 'One-day outing containing several activities in sequence'),
-('Weekend', 2, 3, 'Two- or three-day family trip'),
-('Week Long', 5, 8, 'Extended family holiday lasting approximately one week');
+(
+    'Single Afternoon',
+    1, 1, 1, 2,
+    'One-day outing centered on one or two activities'
+),
+(
+    'Multi-Activity Day',
+    1, 1, 3, 8,
+    'One-day outing containing several activities in sequence'
+),
+(
+    'Weekend',
+    2, 3, 1, 8,
+    'Two- or three-day family trip'
+),
+(
+    'Week Long',
+    5, 8, 1, 8,
+    'Extended family trip lasting approximately one week'
+);
 
 
 -- =========================================================
--- 3. TRAVEL MODES
+-- HOLIDAYS
 -- =========================================================
 
-INSERT INTO TravelMode
-(travel_mode_name, description)
+INSERT INTO Holiday (
+    holiday_name,
+    description
+)
+VALUES
+(
+    'Halloween',
+    'Halloween-related family outing'
+),
+(
+    'Christmas',
+    'Christmas-season family outing'
+);
+
+
+-- =========================================================
+-- TRAVEL MODES
+-- =========================================================
+
+INSERT INTO TravelMode (
+    travel_mode_name,
+    description
+)
 VALUES
 ('Car', 'Private automobile travel'),
 ('Plane', 'Commercial airline travel'),
 ('Train', 'Passenger rail travel'),
-('Bus', 'Bus or motor-coach travel'),
+('Bus', 'Public or motor-coach bus travel'),
 ('Other', 'Local transportation not covered by another mode');
 
 
 -- =========================================================
--- 4. LOCATIONS
+-- LOCATIONS
 -- =========================================================
 
-INSERT INTO Location
-(location_name, address_line1, city, state_province, postal_code, country, location_type)
+INSERT INTO Location (
+    location_name,
+    address_line1,
+    city,
+    state_province,
+    postal_code,
+    country,
+    location_type
+)
 VALUES
 ('Hart Home', '10 Maple Lane', 'Albany', 'New York', '12203', 'United States', 'Home'),
 ('Sunny Acres Farm', '120 Harvest Road', 'Voorheesville', 'New York', '12186', 'United States', 'Farm'),
@@ -78,11 +134,16 @@ VALUES
 
 
 -- =========================================================
--- 5. ACTIVITIES
+-- ACTIVITIES
 -- =========================================================
 
-INSERT INTO Activity
-(activity_name, activity_category, default_duration_minutes, min_participants, description)
+INSERT INTO Activity (
+    activity_name,
+    activity_category,
+    default_duration_minutes,
+    min_participants,
+    description
+)
 VALUES
 ('Pumpkin Picking', 'Outdoor', 90, 1, 'Select pumpkins at a farm'),
 ('Farm Market', 'Shopping', 60, 1, 'Visit a farm market'),
@@ -103,11 +164,14 @@ VALUES
 
 
 -- =========================================================
--- 6. PACKING ITEMS
+-- PACKING ITEMS
 -- =========================================================
 
-INSERT INTO PackingItem
-(item_name, item_category, description)
+INSERT INTO PackingItem (
+    item_name,
+    item_category,
+    description
+)
 VALUES
 ('Phone', 'Electronics', 'Mobile phone'),
 ('Wallet', 'Personal', 'Wallet and payment cards'),
@@ -134,11 +198,16 @@ VALUES
 
 
 -- =========================================================
--- 7. ACCOMMODATIONS
+-- ACCOMMODATIONS
 -- =========================================================
 
-INSERT INTO Accommodation
-(accommodation_name, location_id, accommodation_type, phone, website)
+INSERT INTO Accommodation (
+    accommodation_name,
+    location_id,
+    accommodation_type,
+    phone,
+    website
+)
 VALUES
 (
     'White Pine Mountain Lodge',
@@ -189,52 +258,67 @@ VALUES
 -- =========================================================
 
 SET @single_afternoon = (
-    SELECT trip_type_id FROM TripType
+    SELECT trip_type_id
+    FROM TripType
     WHERE trip_type_name = 'Single Afternoon'
 );
 
-SET @multi_day = (
-    SELECT trip_type_id FROM TripType
+SET @multi_activity_day = (
+    SELECT trip_type_id
+    FROM TripType
     WHERE trip_type_name = 'Multi-Activity Day'
 );
 
 SET @weekend = (
-    SELECT trip_type_id FROM TripType
+    SELECT trip_type_id
+    FROM TripType
     WHERE trip_type_name = 'Weekend'
 );
 
 SET @week_long = (
-    SELECT trip_type_id FROM TripType
+    SELECT trip_type_id
+    FROM TripType
     WHERE trip_type_name = 'Week Long'
 );
 
+SET @halloween_holiday = (
+    SELECT holiday_id
+    FROM Holiday
+    WHERE holiday_name = 'Halloween'
+);
+
+SET @christmas_holiday = (
+    SELECT holiday_id
+    FROM Holiday
+    WHERE holiday_name = 'Christmas'
+);
+
 SET @car = (
-    SELECT travel_mode_id FROM TravelMode
+    SELECT travel_mode_id
+    FROM TravelMode
     WHERE travel_mode_name = 'Car'
 );
 
 SET @plane = (
-    SELECT travel_mode_id FROM TravelMode
+    SELECT travel_mode_id
+    FROM TravelMode
     WHERE travel_mode_name = 'Plane'
 );
 
-SET @train = (
-    SELECT travel_mode_id FROM TravelMode
-    WHERE travel_mode_name = 'Train'
-);
-
-SET @other = (
-    SELECT travel_mode_id FROM TravelMode
-    WHERE travel_mode_name = 'Other'
-);
-
 
 -- =========================================================
--- 8. OUTINGS
+-- OUTINGS
 -- =========================================================
 
-INSERT INTO Outing
-(outing_name, trip_type_id, primary_location_id, holiday_name, start_date, end_date, description)
+INSERT INTO Outing (
+    outing_name,
+    trip_type_id,
+    primary_location_id,
+    holiday_id,
+    start_date,
+    end_date,
+    description
+)
 VALUES
 (
     'Fall Pumpkin Picking',
@@ -247,9 +331,9 @@ VALUES
 ),
 (
     'Halloween Adventure Day',
-    @multi_day,
+    @multi_activity_day,
     (SELECT location_id FROM Location WHERE location_name = 'Hudson Valley Orchard'),
-    'Halloween',
+    @halloween_holiday,
     '2026-10-31',
     '2026-10-31',
     'Several Halloween activities completed in sequence'
@@ -267,10 +351,10 @@ VALUES
     'Boston Holiday Weekend',
     @weekend,
     (SELECT location_id FROM Location WHERE location_name = 'Downtown Boston'),
-    'Christmas',
+    @christmas_holiday,
     '2026-12-18',
     '2026-12-20',
-    'Weekend city trip using air travel'
+    'Weekend family road trip from Albany to Boston'
 ),
 (
     'Adirondack Summer Week',
@@ -285,69 +369,86 @@ VALUES
     'Chicago Christmas Week',
     @week_long,
     (SELECT location_id FROM Location WHERE location_name = 'Downtown Chicago'),
-    'Christmas',
+    @christmas_holiday,
     '2027-12-20',
     '2027-12-27',
-    'Week-long flying holiday with multiple activities'
+    'Week-long family holiday requiring airplane travel'
 );
 
-
--- =========================================================
--- OUTING LOOKUPS
--- =========================================================
 
 SET @pumpkin = (
     SELECT outing_id FROM Outing
     WHERE outing_name = 'Fall Pumpkin Picking'
+      AND start_date = '2026-10-10'
 );
 
 SET @halloween = (
     SELECT outing_id FROM Outing
     WHERE outing_name = 'Halloween Adventure Day'
+      AND start_date = '2026-10-31'
 );
 
 SET @mountain = (
     SELECT outing_id FROM Outing
     WHERE outing_name = 'Winter Mountain Weekend'
+      AND start_date = '2027-01-15'
 );
 
 SET @boston = (
     SELECT outing_id FROM Outing
     WHERE outing_name = 'Boston Holiday Weekend'
+      AND start_date = '2026-12-18'
 );
 
 SET @adirondack = (
     SELECT outing_id FROM Outing
     WHERE outing_name = 'Adirondack Summer Week'
+      AND start_date = '2027-07-11'
 );
 
 SET @chicago = (
     SELECT outing_id FROM Outing
     WHERE outing_name = 'Chicago Christmas Week'
+      AND start_date = '2027-12-20'
 );
 
 
 -- =========================================================
--- 9. OUTING PARTICIPANTS
--- All four family members attend all six sample outings.
+-- OUTING PARTICIPANTS
 -- =========================================================
 
-INSERT INTO OutingParticipant
-(outing_id, member_id, attendance_status)
-SELECT o.outing_id, f.member_id, 'Confirmed'
+INSERT INTO OutingParticipant (
+    outing_id,
+    member_id,
+    attendance_status
+)
+SELECT
+    o.outing_id,
+    f.member_id,
+    'Confirmed'
 FROM Outing o
 CROSS JOIN FamilyMember f;
 
 
 -- =========================================================
--- 10. OUTING ACTIVITIES
+-- OUTING ACTIVITIES
+-- Every multi-day outing contains at least one activity
+-- on every calendar day.
 -- =========================================================
 
-INSERT INTO OutingActivity
-(outing_id, activity_date, sequence_number, activity_id, location_id, start_time, planned_duration_minutes, notes)
+INSERT INTO OutingActivity (
+    outing_id,
+    activity_date,
+    sequence_number,
+    activity_id,
+    location_id,
+    start_time,
+    planned_duration_minutes,
+    notes
+)
 VALUES
 
--- Scenario 1
+-- Scenario 1: Single Afternoon
 (
     @pumpkin, '2026-10-10', 1,
     (SELECT activity_id FROM Activity WHERE activity_name = 'Pumpkin Picking'),
@@ -361,7 +462,7 @@ VALUES
     '15:00:00', 60, 'Farm market visit before returning home'
 ),
 
--- Scenario 2
+-- Scenario 2: Multi-Activity Day
 (
     @halloween, '2026-10-31', 1,
     (SELECT activity_id FROM Activity WHERE activity_name = 'Apple Picking'),
@@ -387,7 +488,7 @@ VALUES
     '17:30:00', 90, NULL
 ),
 
--- Scenario 3
+-- Scenario 3: Weekend Driving
 (
     @mountain, '2027-01-15', 1,
     (SELECT activity_id FROM Activity WHERE activity_name = 'Dinner'),
@@ -413,12 +514,12 @@ VALUES
     '09:30:00', 120, NULL
 ),
 
--- Scenario 4
+-- Scenario 4: Boston Driving Weekend
 (
     @boston, '2026-12-18', 1,
     (SELECT activity_id FROM Activity WHERE activity_name = 'Dinner'),
     (SELECT location_id FROM Location WHERE location_name = 'Downtown Boston'),
-    '19:00:00', 90, NULL
+    '19:00:00', 90, 'Arrival-day dinner'
 ),
 (
     @boston, '2026-12-19', 1,
@@ -426,8 +527,20 @@ VALUES
     (SELECT location_id FROM Location WHERE location_name = 'Downtown Boston'),
     '10:00:00', 180, NULL
 ),
+(
+    @boston, '2026-12-20', 1,
+    (SELECT activity_id FROM Activity WHERE activity_name = 'Sightseeing'),
+    (SELECT location_id FROM Location WHERE location_name = 'Downtown Boston'),
+    '09:00:00', 120, 'Final morning before driving home'
+),
 
--- Scenario 5
+-- Scenario 5: Adirondack Week
+(
+    @adirondack, '2027-07-11', 1,
+    (SELECT activity_id FROM Activity WHERE activity_name = 'Sightseeing'),
+    (SELECT location_id FROM Location WHERE location_name = 'Lake Placid Village'),
+    '16:00:00', 120, 'Arrival-day village visit'
+),
 (
     @adirondack, '2027-07-12', 1,
     (SELECT activity_id FROM Activity WHERE activity_name = 'Hiking'),
@@ -447,13 +560,31 @@ VALUES
     '13:00:00', 90, NULL
 ),
 (
+    @adirondack, '2027-07-15', 1,
+    (SELECT activity_id FROM Activity WHERE activity_name = 'Sightseeing'),
+    (SELECT location_id FROM Location WHERE location_name = 'Lake Placid Village'),
+    '11:00:00', 120, 'Accommodation transition day'
+),
+(
     @adirondack, '2027-07-16', 1,
     (SELECT activity_id FROM Activity WHERE activity_name = 'Sightseeing'),
     (SELECT location_id FROM Location WHERE location_name = 'Lake Placid Village'),
     '10:00:00', 180, NULL
 ),
+(
+    @adirondack, '2027-07-17', 1,
+    (SELECT activity_id FROM Activity WHERE activity_name = 'Sightseeing'),
+    (SELECT location_id FROM Location WHERE location_name = 'Lake Placid Village'),
+    '09:00:00', 120, 'Final morning activity before departure'
+),
 
--- Scenario 6
+-- Scenario 6: Chicago Flying Week
+(
+    @chicago, '2027-12-20', 1,
+    (SELECT activity_id FROM Activity WHERE activity_name = 'Dinner'),
+    (SELECT location_id FROM Location WHERE location_name = 'Downtown Chicago'),
+    '19:00:00', 90, 'Arrival-day dinner'
+),
 (
     @chicago, '2027-12-21', 1,
     (SELECT activity_id FROM Activity WHERE activity_name = 'Holiday Market'),
@@ -470,25 +601,52 @@ VALUES
     @chicago, '2027-12-23', 1,
     (SELECT activity_id FROM Activity WHERE activity_name = 'Ice Skating'),
     (SELECT location_id FROM Location WHERE location_name = 'Millennium Park'),
-    '14:00:00', 90, NULL
+    '13:00:00', 90, NULL
 ),
 (
     @chicago, '2027-12-24', 1,
     (SELECT activity_id FROM Activity WHERE activity_name = 'Sightseeing'),
     (SELECT location_id FROM Location WHERE location_name = 'Downtown Chicago'),
-    '10:00:00', 180, NULL
+    '11:00:00', 120, NULL
+),
+(
+    @chicago, '2027-12-25', 1,
+    (SELECT activity_id FROM Activity WHERE activity_name = 'Sightseeing'),
+    (SELECT location_id FROM Location WHERE location_name = 'Millennium Park'),
+    '11:00:00', 120, 'Christmas Day sightseeing'
+),
+(
+    @chicago, '2027-12-26', 1,
+    (SELECT activity_id FROM Activity WHERE activity_name = 'Museum Visit'),
+    (SELECT location_id FROM Location WHERE location_name = 'Museum Campus'),
+    '11:00:00', 150, NULL
+),
+(
+    @chicago, '2027-12-27', 1,
+    (SELECT activity_id FROM Activity WHERE activity_name = 'Sightseeing'),
+    (SELECT location_id FROM Location WHERE location_name = 'Downtown Chicago'),
+    '09:00:00', 120, 'Final morning before departure'
 );
 
 
 -- =========================================================
--- 11. TRAVEL LEGS
+-- TRAVEL LEGS
+-- estimated_cost_total_usd = total family cost for that leg.
 -- =========================================================
 
-INSERT INTO TravelLeg
-(outing_id, sequence_number, travel_mode_id, from_location_id, to_location_id, departure_datetime, planned_duration_minutes, estimated_cost)
+INSERT INTO TravelLeg (
+    outing_id,
+    sequence_number,
+    travel_mode_id,
+    from_location_id,
+    to_location_id,
+    departure_datetime,
+    planned_duration_minutes,
+    estimated_cost_total_usd
+)
 VALUES
 
--- Scenario 1
+-- Pumpkin Picking
 (
     @pumpkin, 1, @car,
     (SELECT location_id FROM Location WHERE location_name = 'Hart Home'),
@@ -502,7 +660,7 @@ VALUES
     '2026-10-10 16:30:00', 35, 8.00
 ),
 
--- Scenario 2
+-- Halloween
 (
     @halloween, 1, @car,
     (SELECT location_id FROM Location WHERE location_name = 'Hart Home'),
@@ -534,7 +692,7 @@ VALUES
     '2026-10-31 19:15:00', 25, 6.00
 ),
 
--- Scenario 3
+-- Winter Mountain Weekend
 (
     @mountain, 1, @car,
     (SELECT location_id FROM Location WHERE location_name = 'Hart Home'),
@@ -548,45 +706,21 @@ VALUES
     '2027-01-17 14:00:00', 150, 35.00
 ),
 
--- Scenario 4
+-- Boston road trip
 (
     @boston, 1, @car,
     (SELECT location_id FROM Location WHERE location_name = 'Hart Home'),
-    (SELECT location_id FROM Location WHERE location_name = 'Albany International Airport'),
-    '2026-12-18 08:00:00', 25, 6.00
-),
-(
-    @boston, 2, @plane,
-    (SELECT location_id FROM Location WHERE location_name = 'Albany International Airport'),
-    (SELECT location_id FROM Location WHERE location_name = 'Boston Logan International Airport'),
-    '2026-12-18 10:30:00', 65, 680.00
-),
-(
-    @boston, 3, @train,
-    (SELECT location_id FROM Location WHERE location_name = 'Boston Logan International Airport'),
     (SELECT location_id FROM Location WHERE location_name = 'Downtown Boston'),
-    '2026-12-18 12:00:00', 30, 18.00
+    '2026-12-18 08:00:00', 180, 55.00
 ),
 (
-    @boston, 4, @train,
+    @boston, 2, @car,
     (SELECT location_id FROM Location WHERE location_name = 'Downtown Boston'),
-    (SELECT location_id FROM Location WHERE location_name = 'Boston Logan International Airport'),
-    '2026-12-20 12:30:00', 30, 18.00
-),
-(
-    @boston, 5, @plane,
-    (SELECT location_id FROM Location WHERE location_name = 'Boston Logan International Airport'),
-    (SELECT location_id FROM Location WHERE location_name = 'Albany International Airport'),
-    '2026-12-20 15:00:00', 65, 680.00
-),
-(
-    @boston, 6, @car,
-    (SELECT location_id FROM Location WHERE location_name = 'Albany International Airport'),
     (SELECT location_id FROM Location WHERE location_name = 'Hart Home'),
-    '2026-12-20 17:00:00', 25, 6.00
+    '2026-12-20 14:00:00', 180, 55.00
 ),
 
--- Scenario 5
+-- Adirondack week
 (
     @adirondack, 1, @car,
     (SELECT location_id FROM Location WHERE location_name = 'Hart Home'),
@@ -597,60 +731,67 @@ VALUES
     @adirondack, 2, @car,
     (SELECT location_id FROM Location WHERE location_name = 'Adirondack Lake Cabin Area'),
     (SELECT location_id FROM Location WHERE location_name = 'Lake Placid Village'),
-    '2027-07-15 10:00:00', 45, 10.00
+    '2027-07-15 09:00:00', 35, 10.00
 ),
 (
     @adirondack, 3, @car,
     (SELECT location_id FROM Location WHERE location_name = 'Lake Placid Village'),
     (SELECT location_id FROM Location WHERE location_name = 'Hart Home'),
-    '2027-07-17 12:00:00', 150, 35.00
+    '2027-07-17 13:00:00', 165, 40.00
 ),
 
--- Scenario 6
+-- Chicago airplane trip
 (
     @chicago, 1, @car,
     (SELECT location_id FROM Location WHERE location_name = 'Hart Home'),
     (SELECT location_id FROM Location WHERE location_name = 'Albany International Airport'),
-    '2027-12-20 06:30:00', 25, 6.00
+    '2027-12-20 07:30:00', 25, 6.00
 ),
 (
     @chicago, 2, @plane,
     (SELECT location_id FROM Location WHERE location_name = 'Albany International Airport'),
     (SELECT location_id FROM Location WHERE location_name = 'Chicago O Hare International Airport'),
-    '2027-12-20 09:00:00', 150, 1200.00
+    '2027-12-20 10:00:00', 150, 1200.00
 ),
 (
-    @chicago, 3, @other,
+    @chicago, 3, @car,
     (SELECT location_id FROM Location WHERE location_name = 'Chicago O Hare International Airport'),
     (SELECT location_id FROM Location WHERE location_name = 'Downtown Chicago'),
-    '2027-12-20 11:45:00', 45, 65.00
+    '2027-12-20 12:45:00', 45, 75.00
 ),
 (
-    @chicago, 4, @other,
+    @chicago, 4, @car,
     (SELECT location_id FROM Location WHERE location_name = 'Downtown Chicago'),
     (SELECT location_id FROM Location WHERE location_name = 'Chicago O Hare International Airport'),
-    '2027-12-27 09:00:00', 45, 65.00
+    '2027-12-27 13:00:00', 45, 75.00
 ),
 (
     @chicago, 5, @plane,
     (SELECT location_id FROM Location WHERE location_name = 'Chicago O Hare International Airport'),
     (SELECT location_id FROM Location WHERE location_name = 'Albany International Airport'),
-    '2027-12-27 12:00:00', 150, 1200.00
+    '2027-12-27 16:00:00', 150, 1200.00
 ),
 (
     @chicago, 6, @car,
     (SELECT location_id FROM Location WHERE location_name = 'Albany International Airport'),
     (SELECT location_id FROM Location WHERE location_name = 'Hart Home'),
-    '2027-12-27 15:30:00', 25, 6.00
+    '2027-12-27 19:00:00', 25, 6.00
 );
 
 
 -- =========================================================
--- 12. OUTING ACCOMMODATIONS
+-- ACCOMMODATION BOOKINGS
+-- nightly_rate_usd explicitly identifies USD.
 -- =========================================================
 
-INSERT INTO OutingAccommodation
-(outing_id, accommodation_id, check_in_date, check_out_date, nightly_rate, booking_reference)
+INSERT INTO OutingAccommodation (
+    outing_id,
+    accommodation_id,
+    check_in_date,
+    check_out_date,
+    nightly_rate_usd,
+    booking_reference
+)
 VALUES
 (
     @mountain,
@@ -703,33 +844,36 @@ VALUES
 
 
 -- =========================================================
--- MEMBER LOOKUPS
+-- MEMBER + ITEM VARIABLES
 -- =========================================================
 
 SET @jordan = (
     SELECT member_id FROM FamilyMember
-    WHERE first_name = 'Jordan' AND last_name = 'Hart'
+    WHERE first_name = 'Jordan'
+      AND last_name = 'Hart'
+      AND birth_date = '1988-04-12'
 );
 
 SET @taylor = (
     SELECT member_id FROM FamilyMember
-    WHERE first_name = 'Taylor' AND last_name = 'Hart'
+    WHERE first_name = 'Taylor'
+      AND last_name = 'Hart'
+      AND birth_date = '1990-09-21'
 );
 
 SET @avery = (
     SELECT member_id FROM FamilyMember
-    WHERE first_name = 'Avery' AND last_name = 'Hart'
+    WHERE first_name = 'Avery'
+      AND last_name = 'Hart'
+      AND birth_date = '2013-03-14'
 );
 
 SET @riley = (
     SELECT member_id FROM FamilyMember
-    WHERE first_name = 'Riley' AND last_name = 'Hart'
+    WHERE first_name = 'Riley'
+      AND last_name = 'Hart'
+      AND birth_date = '2017-07-08'
 );
-
-
--- =========================================================
--- PACKING ITEM LOOKUPS
--- =========================================================
 
 SET @phone = (SELECT item_id FROM PackingItem WHERE item_name = 'Phone');
 SET @wallet = (SELECT item_id FROM PackingItem WHERE item_name = 'Wallet');
@@ -737,7 +881,6 @@ SET @water = (SELECT item_id FROM PackingItem WHERE item_name = 'Water Bottle');
 SET @snacks = (SELECT item_id FROM PackingItem WHERE item_name = 'Snacks');
 SET @boots = (SELECT item_id FROM PackingItem WHERE item_name = 'Boots');
 SET @gloves = (SELECT item_id FROM PackingItem WHERE item_name = 'Gloves');
-SET @charger = (SELECT item_id FROM PackingItem WHERE item_name = 'Phone Charger');
 SET @medication = (SELECT item_id FROM PackingItem WHERE item_name = 'Medication');
 SET @toothbrush = (SELECT item_id FROM PackingItem WHERE item_name = 'Toothbrush');
 SET @clothing = (SELECT item_id FROM PackingItem WHERE item_name = 'Clothing');
@@ -756,26 +899,35 @@ SET @carry_charger = (SELECT item_id FROM PackingItem WHERE item_name = 'Carry-O
 
 
 -- =========================================================
--- 13. MEMBER TRIP PACKING RULES
+-- MEMBER TRIP PACKING
+-- Suitcases appear only on multi-day TripTypes.
 -- =========================================================
 
-INSERT INTO MemberTripPackingItem
-(member_id, trip_type_id, item_id, bag_type, quantity)
+INSERT INTO MemberTripPackingItem (
+    member_id,
+    trip_type_id,
+    item_id,
+    bag_type,
+    quantity
+)
 VALUES
 
 -- Jordan
 (@jordan, @single_afternoon, @phone, 'Personal Item', 1),
 (@jordan, @single_afternoon, @wallet, 'Personal Item', 1),
 (@jordan, @single_afternoon, @water, 'Personal Item', 1),
-(@jordan, @multi_day, @phone, 'Personal Item', 1),
-(@jordan, @multi_day, @wallet, 'Personal Item', 1),
-(@jordan, @multi_day, @water, 'Personal Item', 1),
+
+(@jordan, @multi_activity_day, @phone, 'Personal Item', 1),
+(@jordan, @multi_activity_day, @wallet, 'Personal Item', 1),
+(@jordan, @multi_activity_day, @water, 'Personal Item', 1),
+
 (@jordan, @weekend, @phone, 'Personal Item', 1),
 (@jordan, @weekend, @wallet, 'Personal Item', 1),
 (@jordan, @weekend, @medication, 'Personal Item', 1),
 (@jordan, @weekend, @toothbrush, 'Suitcase', 1),
 (@jordan, @weekend, @clothing, 'Suitcase', 2),
 (@jordan, @weekend, @sleepwear, 'Suitcase', 1),
+
 (@jordan, @week_long, @phone, 'Personal Item', 1),
 (@jordan, @week_long, @wallet, 'Personal Item', 1),
 (@jordan, @week_long, @medication, 'Personal Item', 1),
@@ -788,11 +940,13 @@ VALUES
 (@taylor, @single_afternoon, @phone, 'Personal Item', 1),
 (@taylor, @single_afternoon, @wallet, 'Personal Item', 1),
 (@taylor, @single_afternoon, @water, 'Personal Item', 1),
+
 (@taylor, @weekend, @phone, 'Personal Item', 1),
 (@taylor, @weekend, @wallet, 'Personal Item', 1),
 (@taylor, @weekend, @toothbrush, 'Suitcase', 1),
 (@taylor, @weekend, @clothing, 'Suitcase', 2),
 (@taylor, @weekend, @sleepwear, 'Suitcase', 1),
+
 (@taylor, @week_long, @phone, 'Personal Item', 1),
 (@taylor, @week_long, @wallet, 'Personal Item', 1),
 (@taylor, @week_long, @toothbrush, 'Suitcase', 1),
@@ -804,6 +958,7 @@ VALUES
 (@avery, @weekend, @water, 'Personal Item', 1),
 (@avery, @weekend, @toothbrush, 'Suitcase', 1),
 (@avery, @weekend, @clothing, 'Suitcase', 2),
+
 (@avery, @week_long, @phone, 'Personal Item', 1),
 (@avery, @week_long, @water, 'Personal Item', 1),
 (@avery, @week_long, @toothbrush, 'Suitcase', 1),
@@ -814,6 +969,7 @@ VALUES
 (@riley, @weekend, @snacks, 'Personal Item', 2),
 (@riley, @weekend, @toothbrush, 'Suitcase', 1),
 (@riley, @weekend, @clothing, 'Suitcase', 3),
+
 (@riley, @week_long, @water, 'Personal Item', 1),
 (@riley, @week_long, @snacks, 'Personal Item', 2),
 (@riley, @week_long, @toothbrush, 'Suitcase', 1),
@@ -821,36 +977,51 @@ VALUES
 
 
 -- =========================================================
--- 14. MEMBER TRAVEL PACKING RULES
+-- MEMBER TRAVEL PACKING
+-- Vehicle-specific equipment is stored as Vehicle,
+-- never Suitcase.
 -- =========================================================
 
-INSERT INTO MemberTravelPackingItem
-(member_id, travel_mode_id, item_id, bag_type, quantity)
+INSERT INTO MemberTravelPackingItem (
+    member_id,
+    travel_mode_id,
+    item_id,
+    bag_type,
+    quantity
+)
 VALUES
 (@jordan, @plane, @documents, 'Personal Item', 1),
 (@jordan, @plane, @liquids, 'Personal Item', 1),
 (@jordan, @plane, @carry_charger, 'Personal Item', 1),
+
 (@taylor, @plane, @documents, 'Personal Item', 1),
 (@taylor, @plane, @liquids, 'Personal Item', 1),
 (@taylor, @plane, @carry_charger, 'Personal Item', 1),
+
 (@avery, @plane, @documents, 'Personal Item', 1),
 (@avery, @plane, @carry_charger, 'Personal Item', 1),
+
 (@riley, @plane, @documents, 'Personal Item', 1),
 
 (@jordan, @car, @road_snacks, 'Personal Item', 1),
-(@jordan, @car, @cooler, 'Suitcase', 1),
-(@jordan, @car, @emergency, 'Suitcase', 1),
+(@jordan, @car, @cooler, 'Vehicle', 1),
+(@jordan, @car, @emergency, 'Vehicle', 1),
+
 (@taylor, @car, @road_snacks, 'Personal Item', 1),
 (@avery, @car, @road_snacks, 'Personal Item', 1),
 (@riley, @car, @road_snacks, 'Personal Item', 1);
 
 
 -- =========================================================
--- 15. ACTIVITY PACKING RULES
+-- ACTIVITY PACKING
 -- =========================================================
 
-INSERT INTO ActivityPackingItem
-(activity_id, item_id, quantity, requirement_level)
+INSERT INTO ActivityPackingItem (
+    activity_id,
+    item_id,
+    quantity,
+    requirement_level
+)
 VALUES
 (
     (SELECT activity_id FROM Activity WHERE activity_name = 'Pumpkin Picking'),
@@ -903,13 +1074,14 @@ VALUES
 
 
 -- =========================================================
--- TABLE-COUNT VERIFICATION
--- Every table should contain sample data.
+-- FINAL ROW COUNTS
 -- =========================================================
 
 SELECT 'FamilyMember' AS table_name, COUNT(*) AS row_count FROM FamilyMember
 UNION ALL
 SELECT 'TripType', COUNT(*) FROM TripType
+UNION ALL
+SELECT 'Holiday', COUNT(*) FROM Holiday
 UNION ALL
 SELECT 'Location', COUNT(*) FROM Location
 UNION ALL
@@ -939,41 +1111,52 @@ SELECT 'ActivityPackingItem', COUNT(*) FROM ActivityPackingItem;
 
 
 -- =========================================================
--- SCENARIO RECONCILIATION
--- These should all return zero invalid rows.
+-- MULTI-DAY COVERAGE AUDIT
+-- Expected: 0 rows.
 -- =========================================================
 
--- Activities outside the parent outing date range
+WITH RECURSIVE outing_days AS (
+    SELECT
+        outing_id,
+        outing_name,
+        start_date AS activity_date,
+        end_date
+    FROM Outing
+    WHERE end_date > start_date
+
+    UNION ALL
+
+    SELECT
+        outing_id,
+        outing_name,
+        DATE_ADD(activity_date, INTERVAL 1 DAY),
+        end_date
+    FROM outing_days
+    WHERE activity_date < end_date
+)
 SELECT
-    oa.outing_id,
-    oa.activity_date
-FROM OutingActivity oa
-JOIN Outing o
-    ON o.outing_id = oa.outing_id
-WHERE oa.activity_date < o.start_date
-   OR oa.activity_date > o.end_date;
+    od.outing_name,
+    od.activity_date
+FROM outing_days od
+LEFT JOIN OutingActivity oa
+    ON oa.outing_id = od.outing_id
+   AND oa.activity_date = od.activity_date
+WHERE oa.outing_id IS NULL
+ORDER BY od.outing_id, od.activity_date;
 
 
--- Accommodation dates outside the parent outing
-SELECT
-    x.outing_id,
-    x.check_in_date,
-    x.check_out_date
-FROM OutingAccommodation x
-JOIN Outing o
-    ON o.outing_id = x.outing_id
-WHERE x.check_in_date < o.start_date
-   OR x.check_out_date > DATE_ADD(o.end_date, INTERVAL 1 DAY);
+-- =========================================================
+-- TRIP DURATION AUDIT
+-- Expected: 0 rows.
+-- =========================================================
 
-
--- TripType duration mismatches
 SELECT
     o.outing_name,
     DATEDIFF(o.end_date, o.start_date) + 1 AS outing_days,
-    t.min_days,
-    t.max_days
+    tt.min_days,
+    tt.max_days
 FROM Outing o
-JOIN TripType t
-    ON t.trip_type_id = o.trip_type_id
+JOIN TripType tt
+    ON tt.trip_type_id = o.trip_type_id
 WHERE DATEDIFF(o.end_date, o.start_date) + 1
-      NOT BETWEEN t.min_days AND t.max_days;
+      NOT BETWEEN tt.min_days AND tt.max_days;
