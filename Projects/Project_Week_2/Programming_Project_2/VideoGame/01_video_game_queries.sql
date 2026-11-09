@@ -23,23 +23,39 @@ ORDER BY GameName;
 
 -- =========================================================
 -- 2. Pick four games and update their NumPlayers field.
--- =========================================================
-
--- =========================================================
--- 2. Pick four games and update their NumPlayers field.
+--
+-- The games are named for readability, while the outer UPDATE
+-- predicates on the primary-key Id so the statement also works
+-- with MySQL Workbench Safe Updates enabled.
 -- =========================================================
 
 UPDATE Game
 SET NumPlayers = 4
-WHERE Id IN (1, 2, 3, 4);
+WHERE Id IN (
+    SELECT Id
+    FROM (
+        SELECT Id
+        FROM Game
+        WHERE GameName IN (
+            'Animal Crossing',
+            'Wild World',
+            'City Folk',
+            'New Leaf'
+        )
+    ) AS SelectedGames
+);
 
 SELECT
-    Id,
     GameName,
     NumPlayers
 FROM Game
-WHERE Id IN (1, 2, 3, 4)
-ORDER BY Id;
+WHERE GameName IN (
+    'Animal Crossing',
+    'Wild World',
+    'City Folk',
+    'New Leaf'
+)
+ORDER BY GameName;
 
 
 -- =========================================================
@@ -60,12 +76,19 @@ ORDER BY c.ReleaseDate, g.GameName;
 -- =========================================================
 -- 4. How many games were released on all
 --    of the PlayStation consoles?
+--
+-- In the supplied professor database, Play Station, Play Station 2-5,
+-- and Play Station Portable all use the "Play Station" prefix.
 -- =========================================================
 
 SELECT
     COUNT(*) AS NumberOfPlayStationGames
 FROM Game
-WHERE ConsoleName LIKE 'Play Station%';
+WHERE ConsoleName IN (
+    SELECT ConsoleName
+    FROM Console
+    WHERE ConsoleName LIKE 'Play Station%'
+);
 
 
 -- =========================================================

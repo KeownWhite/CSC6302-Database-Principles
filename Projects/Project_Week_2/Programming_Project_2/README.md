@@ -1,6 +1,6 @@
 # CSC6302 Programming Project 2
 
-This folder contains the Project 2 work built on the Module 2 Holiday Planner database.
+This folder contains the final Project 2 work built on the Module 2 Holiday Planner database.
 
 ## Run order
 
@@ -12,37 +12,31 @@ This folder contains the Project 2 work built on the Module 2 Holiday Planner da
 4. Run `Tests/holiday_query_verification.sql`.
 5. Run `HolidayPlanner/02_holiday_queries.sql`.
 
+The professor-facing build script combines the base database and Project 2 revision into one self-contained `HolidayPlanner_Project2_Revised.sql`.
+
 ### Video Game database
 
 1. Run the professor's `VideoGameCreationScript.sql`.
 2. Run `VideoGame/01_video_game_queries.sql`.
 
-## Submission files
+## Project 2 design revisions
 
-After all tests pass, run `build_submission.ps1` from the CSC6302 `MySQL` repository root. It combines the final Module 2 Holiday Planner create/data scripts with the Project 2 revision to produce a self-contained `HolidayPlanner_Project2_Revised.sql`.
+Project 2 adds only the information exposed as necessary by the new query requirements:
 
-The professor-facing submission folder will then contain:
+- `FamilyMember.is_self`
+- `OutingParticipant.is_preferred`
+- `Location.distance_from_home_miles`
+- `Activity.season_start_month`
+- `Activity.season_end_month`
 
-- `HolidayPlanner_Project2_Revised.sql`
-- `HolidayPlanner_Project2_Queries.sql`
-- `VideoGame_Project2_Queries.sql`
-- the revised ER diagram PDF after it is exported from MySQL Workbench
+Distance is stored on `Location`, not `TravelLeg`, because the requested "furthest away" value is a one-way destination property relative to the family's home.
 
-A revised ER diagram is required because Project 2 adds attributes to existing Holiday Planner relations.
+The Beach Holiday is an outing name rather than a row in the Holiday lookup table, and its sample destination was moved to a nearby state-park beach so its Single Afternoon classification is internally consistent.
 
 ## AI use
 
 AI-assisted tools were used to help generate and refine sample data for this database project. The schema revisions, constraints, relationships, queries, testing, and final results were reviewed and verified by the student.
 
-## Easter Egg
+## Optional easter egg
 
-There is a small piece of undocumented family database history hidden in the Holiday Planner schema metadata.
-
-If you want to find it, run:
-
-```sql
-SELECT TABLE_COMMENT
-FROM information_schema.TABLES
-WHERE TABLE_SCHEMA = 'HolidayPlanner'
-  AND LOCATE('Keown White', TABLE_COMMENT) > 0;
-```
+The graded database no longer contains the easter egg as table metadata. A separate optional script is retained under `Extras/99_easter_egg.sql` for local use only and is intentionally excluded from the professor-facing submission build.

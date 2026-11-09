@@ -1,17 +1,17 @@
 -- CSC6302 Database Principles
 -- Programming Project 2
--- Holiday Planner verification
---
--- Every section should return the expected value/result before submission.
+-- Holiday Planner post-revision verification
 
 USE HolidayPlanner;
 
 
 -- =========================================================
--- 1. STRUCTURE
+-- 1. PROJECT 2 STRUCTURE
+-- Expected: five rows
 -- =========================================================
 
 SELECT
+    TABLE_NAME,
     COLUMN_NAME,
     DATA_TYPE,
     IS_NULLABLE
@@ -22,7 +22,7 @@ WHERE TABLE_SCHEMA = 'HolidayPlanner'
       OR
       (TABLE_NAME = 'OutingParticipant' AND COLUMN_NAME = 'is_preferred')
       OR
-      (TABLE_NAME = 'TravelLeg' AND COLUMN_NAME = 'estimated_distance_miles')
+      (TABLE_NAME = 'Location' AND COLUMN_NAME = 'distance_from_home_miles')
       OR
       (TABLE_NAME = 'Activity' AND COLUMN_NAME IN (
           'season_start_month',
@@ -33,8 +33,8 @@ ORDER BY TABLE_NAME, ORDINAL_POSITION;
 
 
 -- =========================================================
--- 2. CORE REVISION CHECKS
--- Expected: 1, 1, 0, 4, 5
+-- 2. REVISION CHECKS
+-- Expected values: 1, 1, 0, 3, 0, 5
 -- =========================================================
 
 SELECT COUNT(*) AS self_member_count
@@ -45,18 +45,21 @@ SELECT COUNT(*) AS mother_count
 FROM FamilyMember
 WHERE relationship_to_household = 'Mother';
 
-SELECT COUNT(*) AS invalid_distance_count
-FROM TravelLeg
-WHERE estimated_distance_miles <= 0;
+SELECT COUNT(*) AS invalid_location_distance_count
+FROM Location
+WHERE distance_from_home_miles < 0;
 
 SELECT COUNT(*) AS project2_holiday_count
 FROM Holiday
 WHERE holiday_name IN (
     'Fourth of July',
-    'Beach Holiday',
     'Thanksgiving',
     'Memorial Day'
 );
+
+SELECT COUNT(*) AS beach_holiday_lookup_rows
+FROM Holiday
+WHERE holiday_name = 'Beach Holiday';
 
 SELECT COUNT(*) AS project2_outing_count
 FROM Outing
@@ -70,23 +73,20 @@ WHERE outing_name IN (
 
 
 -- =========================================================
--- 3. QUERY-SPECIFIC DATA CHECKS
+-- 3. QUERY-SPECIFIC DATA
 -- =========================================================
 
--- Christmas overnight outings: expected at least 2.
 SELECT COUNT(*) AS overnight_christmas_outings
 FROM Outing o
 JOIN Holiday h ON h.holiday_id = o.holiday_id
 WHERE h.holiday_name = 'Christmas'
   AND o.end_date > o.start_date;
 
--- Halloween outings: expected 1.
 SELECT COUNT(*) AS halloween_outings
 FROM Outing o
 JOIN Holiday h ON h.holiday_id = o.holiday_id
 WHERE h.holiday_name = 'Halloween';
 
--- Fourth of July trips with at least one Plane leg: expected 1.
 SELECT COUNT(DISTINCT o.outing_id) AS flyable_fourth_of_july_outings
 FROM Outing o
 JOIN Holiday h ON h.holiday_id = o.holiday_id
@@ -95,35 +95,46 @@ JOIN TravelMode tm ON tm.travel_mode_id = tl.travel_mode_id
 WHERE h.holiday_name = 'Fourth of July'
   AND tm.travel_mode_name = 'Plane';
 
--- Youngest member Single Afternoon packing: expected at least 2.
-SELECT COUNT(*) AS youngest_single_afternoon_items
-FROM MemberTripPackingItem mtpi
-JOIN FamilyMember fm ON fm.member_id = mtpi.member_id
-JOIN TripType tt ON tt.trip_type_id = mtpi.trip_type_id
+-- Q4 should include the youngest member's car rule "Road Snacks".
+SELECT
+    fm.first_name,
+    pi.item_name,
+    mvp.quantity,
+    mvp.bag_type
+FROM FamilyMember fm
+JOIN MemberTravelPackingItem mvp ON mvp.member_id = fm.member_id
+JOIN TravelMode tm ON tm.travel_mode_id = mvp.travel_mode_id
+JOIN PackingItem pi ON pi.item_id = mvp.item_id
 WHERE fm.birth_date = (SELECT MAX(birth_date) FROM FamilyMember)
-  AND tt.trip_type_name = 'Single Afternoon';
+  AND tm.travel_mode_name = 'Car'
+  AND pi.item_name = 'Road Snacks';
 
--- Beach Holiday activities: expected 2.
-SELECT COUNT(*) AS beach_holiday_activities
+-- Nearby beach outing should have no Holiday lookup row and short travel.
+SELECT
+    o.outing_name,
+    o.holiday_id,
+    MAX(tl.planned_duration_minutes) AS longest_travel_leg_minutes
 FROM Outing o
-JOIN Holiday h ON h.holiday_id = o.holiday_id
-JOIN OutingActivity oa ON oa.outing_id = o.outing_id
-WHERE h.holiday_name = 'Beach Holiday';
+JOIN TravelLeg tl ON tl.outing_id = o.outing_id
+WHERE o.outing_name = 'Beach Holiday'
+GROUP BY o.outing_id, o.outing_name, o.holiday_id;
 
--- Mother's preferred outings: expected 3.
-SELECT COUNT(*) AS mothers_preferred_outings
+-- Mother's preferred list contains two tied one-day shortest outings.
+SELECT
+    o.outing_name,
+    DATEDIFF(o.end_date, o.start_date) + 1 AS duration_days
 FROM FamilyMember fm
 JOIN OutingParticipant op ON op.member_id = fm.member_id
+JOIN Outing o ON o.outing_id = op.outing_id
 WHERE fm.relationship_to_household = 'Mother'
-  AND op.is_preferred = TRUE;
+  AND op.is_preferred = TRUE
+ORDER BY duration_days, o.outing_name;
 
--- Thanksgiving options: expected 2.
 SELECT COUNT(*) AS thanksgiving_outings
 FROM Outing o
 JOIN Holiday h ON h.holiday_id = o.holiday_id
 WHERE h.holiday_name = 'Thanksgiving';
 
--- Memorial Day overnight options: expected 1.
 SELECT COUNT(*) AS memorial_day_overnight_outings
 FROM Outing o
 JOIN Holiday h ON h.holiday_id = o.holiday_id
@@ -133,11 +144,10 @@ WHERE h.holiday_name = 'Memorial Day'
 
 -- =========================================================
 -- 4. EXISTING BUSINESS-RULE AUDITS
--- All queries below should return 0 rows.
+-- All should return zero rows.
 -- =========================================================
 
-SELECT
-    oa.*
+SELECT oa.*
 FROM OutingActivity oa
 JOIN Outing o
     ON o.outing_id = oa.outing_id
@@ -171,8 +181,7 @@ GROUP BY
     tt.max_activities_per_day
 HAVING COUNT(*) > tt.max_activities_per_day;
 
-SELECT
-    outacc.*
+SELECT outacc.*
 FROM OutingAccommodation outacc
 JOIN Outing o
     ON o.outing_id = outacc.outing_id
@@ -181,21 +190,23 @@ WHERE outacc.check_in_date < o.start_date
 
 
 -- =========================================================
--- 5. EXPECTED HIGH-VALUE ANSWERS
+-- 5. HIGH-VALUE EXPECTED RESULTS
 -- =========================================================
 
--- Furthest outing should be Miami Fourth of July Weekend.
+-- Furthest one-way destination should be Miami Beach at 1220 miles.
 SELECT
     o.outing_name,
-    SUM(tl.estimated_distance_miles) AS total_distance_miles
+    l.location_name,
+    l.distance_from_home_miles
 FROM Outing o
-JOIN Holiday h ON h.holiday_id = o.holiday_id
-JOIN TravelLeg tl ON tl.outing_id = o.outing_id
-GROUP BY o.outing_id, o.outing_name
-ORDER BY total_distance_miles DESC
-LIMIT 1;
+JOIN Location l ON l.location_id = o.primary_location_id
+WHERE l.distance_from_home_miles = (
+    SELECT MAX(l2.distance_from_home_miles)
+    FROM Outing o2
+    JOIN Location l2 ON l2.location_id = o2.primary_location_id
+);
 
--- Average Thanksgiving price should be 600.00 with the supplied sample data.
+-- Thanksgiving average remains $600.00.
 SELECT
     ROUND(
         AVG(

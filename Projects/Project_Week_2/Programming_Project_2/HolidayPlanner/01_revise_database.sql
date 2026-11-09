@@ -1,22 +1,20 @@
 -- CSC6302 Database Principles
 -- Programming Project 2
--- Holiday Planner revisions required by Project 2 queries
+-- Holiday Planner database revisions
 --
--- Run AFTER the final Module 2 HolidayPlanner create and insert scripts.
+-- These revisions are incorporated into the final self-contained
+-- HolidayPlanner_Project2_Revised.sql submission.
 
 USE HolidayPlanner;
+
 
 -- =========================================================
 -- 1. SCHEMA REVISIONS
 -- =========================================================
 
--- Identify the family member representing "you" for personal packing queries.
 ALTER TABLE FamilyMember
     ADD COLUMN is_self BOOLEAN NOT NULL DEFAULT FALSE;
 
--- The original Module 2 design used a generic Parent value.
--- Project 2 specifically asks for the mother, so preserve the general
--- categories while allowing Mother and Father to be represented explicitly.
 ALTER TABLE FamilyMember
     DROP CHECK chk_family_relationship;
 
@@ -48,19 +46,19 @@ WHERE first_name = 'Taylor'
   AND birth_date = '1990-09-21';
 
 
--- Store an individual family member's outing preference on the
--- member-to-outing relationship rather than on Outing itself.
+-- Preference belongs to the member-to-outing relationship because
+-- different family members may prefer different outings.
 ALTER TABLE OutingParticipant
     ADD COLUMN is_preferred BOOLEAN NOT NULL DEFAULT FALSE;
 
 
--- Store estimated distance on each travel leg so "furthest away"
--- can be answered using the complete itinerary.
-ALTER TABLE TravelLeg
-    ADD COLUMN estimated_distance_miles DECIMAL(8,1) NULL;
+-- "Furthest away" is a property of a destination relative to home,
+-- not a property of each individual travel leg. Storing the one-way
+-- distance once on Location avoids duplicated, contradictory values.
+ALTER TABLE Location
+    ADD COLUMN distance_from_home_miles DECIMAL(8,1) NULL;
 
 
--- Store the normal useful season for an activity.
 -- NULL/NULL means the activity is reasonable year-round.
 ALTER TABLE Activity
     ADD COLUMN season_start_month TINYINT UNSIGNED NULL,
@@ -77,16 +75,7 @@ ALTER TABLE Activity
 
 
 -- =========================================================
--- 2. EASTER EGG
--- =========================================================
--- Stored as schema metadata so it does not interfere with any project query.
-ALTER TABLE FamilyMember
-COMMENT =
-'Keown White Easter Egg | My first console was bought with money from my dad''s contracting breakthrough. Whether I had permission to use that money is outside the scope of this query.';
-
-
--- =========================================================
--- 3. SEASONAL ACTIVITY DATA
+-- 2. SEASONAL ACTIVITY DATA
 -- =========================================================
 
 UPDATE Activity SET season_start_month = 9,  season_end_month = 10
@@ -127,90 +116,20 @@ WHERE activity_name = 'Holiday Market';
 
 
 -- =========================================================
--- 4. DISTANCES FOR EXISTING TRAVEL LEGS
+-- 3. NEW HOLIDAYS
 -- =========================================================
--- Approximate planning distances. These values are sample planning data,
--- not route-navigation measurements.
-
-SET @old_safe_updates = @@SQL_SAFE_UPDATES;
-SET SQL_SAFE_UPDATES = 0;
-
-UPDATE TravelLeg tl
-JOIN Outing o ON o.outing_id = tl.outing_id
-SET tl.estimated_distance_miles =
-    CASE
-        WHEN o.outing_name = 'Fall Pumpkin Picking' AND tl.sequence_number IN (1, 2)
-            THEN 15.0
-
-        WHEN o.outing_name = 'Halloween Adventure Day' AND tl.sequence_number = 1
-            THEN 35.0
-        WHEN o.outing_name = 'Halloween Adventure Day' AND tl.sequence_number = 2
-            THEN 15.0
-        WHEN o.outing_name = 'Halloween Adventure Day' AND tl.sequence_number = 3
-            THEN 25.0
-        WHEN o.outing_name = 'Halloween Adventure Day' AND tl.sequence_number = 4
-            THEN 5.0
-        WHEN o.outing_name = 'Halloween Adventure Day' AND tl.sequence_number = 5
-            THEN 10.0
-
-        WHEN o.outing_name = 'Winter Mountain Weekend' AND tl.sequence_number IN (1, 2)
-            THEN 130.0
-
-        WHEN o.outing_name = 'Boston Holiday Weekend' AND tl.sequence_number IN (1, 2)
-            THEN 170.0
-
-        WHEN o.outing_name = 'Adirondack Summer Week' AND tl.sequence_number = 1
-            THEN 140.0
-        WHEN o.outing_name = 'Adirondack Summer Week' AND tl.sequence_number = 2
-            THEN 10.0
-        WHEN o.outing_name = 'Adirondack Summer Week' AND tl.sequence_number = 3
-            THEN 145.0
-
-        WHEN o.outing_name = 'Chicago Christmas Week' AND tl.sequence_number IN (1, 6)
-            THEN 10.0
-        WHEN o.outing_name = 'Chicago Christmas Week' AND tl.sequence_number IN (2, 5)
-            THEN 840.0
-        WHEN o.outing_name = 'Chicago Christmas Week' AND tl.sequence_number IN (3, 4)
-            THEN 18.0
-
-        ELSE tl.estimated_distance_miles
-    END
-WHERE o.outing_name IN (
-    'Fall Pumpkin Picking',
-    'Halloween Adventure Day',
-    'Winter Mountain Weekend',
-    'Boston Holiday Weekend',
-    'Adirondack Summer Week',
-    'Chicago Christmas Week'
-);
-
--- Make sure every existing leg received a value before enforcing NOT NULL.
-SELECT COUNT(*) AS missing_existing_distances
-FROM TravelLeg
-WHERE estimated_distance_miles IS NULL;
-
-ALTER TABLE TravelLeg
-    MODIFY estimated_distance_miles DECIMAL(8,1) NOT NULL,
-    ADD CONSTRAINT chk_tl_distance
-        CHECK (estimated_distance_miles > 0);
-
-SET SQL_SAFE_UPDATES = @old_safe_updates;
-
-
--- =========================================================
--- 5. NEW HOLIDAYS
--- =========================================================
+-- Beach Holiday is an outing name, not a calendar holiday, so it is
+-- intentionally NOT inserted into the Holiday lookup table.
 
 INSERT INTO Holiday (holiday_name, description)
 VALUES
 ('Fourth of July', 'Independence Day family holiday'),
-('Beach Holiday', 'Single-day summer beach outing'),
 ('Thanksgiving', 'Thanksgiving family holiday'),
 ('Memorial Day', 'Memorial Day family holiday');
 
 
 -- =========================================================
--- 6. NEW LOCATIONS
+-- 4. NEW LOCATIONS
 -- =========================================================
 
 INSERT INTO Location (
@@ -224,11 +143,11 @@ INSERT INTO Location (
 )
 VALUES
 (
-    'Jones Beach State Park',
-    '1 Ocean Parkway',
-    'Wantagh',
+    'Grafton Lakes State Park',
+    '254 Grafton Lakes State Park Way',
+    'Grafton',
     'New York',
-    '11793',
+    '12082',
     'United States',
     'Park'
 ),
@@ -253,7 +172,57 @@ VALUES
 
 
 -- =========================================================
--- 7. NEW ACCOMMODATION
+-- 5. DISTANCE FROM HOME
+-- =========================================================
+-- Approximate planning distances from Hart Home. Each value is stored
+-- once on Location so every outing to the same destination uses the
+-- same one-way distance.
+
+SET @old_safe_updates = @@SQL_SAFE_UPDATES;
+SET SQL_SAFE_UPDATES = 0;
+
+UPDATE Location
+SET distance_from_home_miles =
+    CASE location_name
+        WHEN 'Hart Home' THEN 0.0
+        WHEN 'Sunny Acres Farm' THEN 15.0
+        WHEN 'Hudson Valley Orchard' THEN 35.0
+        WHEN 'Harvest Corn Maze' THEN 25.0
+        WHEN 'Black Lantern Manor' THEN 10.0
+        WHEN 'Harvest Bistro' THEN 10.0
+        WHEN 'Albany International Airport' THEN 10.0
+        WHEN 'Downtown Boston' THEN 170.0
+        WHEN 'White Pine Mountain Resort' THEN 130.0
+        WHEN 'Adirondack Lake Cabin Area' THEN 140.0
+        WHEN 'Adirondack Trailhead' THEN 145.0
+        WHEN 'Mirror Lake' THEN 145.0
+        WHEN 'Lake Placid Village' THEN 145.0
+        WHEN 'Chicago O Hare International Airport' THEN 840.0
+        WHEN 'Downtown Chicago' THEN 840.0
+        WHEN 'Millennium Park' THEN 840.0
+        WHEN 'Museum Campus' THEN 840.0
+        WHEN 'Chicago Holiday Market' THEN 840.0
+        WHEN 'Grafton Lakes State Park' THEN 30.0
+        WHEN 'Miami International Airport' THEN 1220.0
+        WHEN 'Miami Beach' THEN 1220.0
+        ELSE distance_from_home_miles
+    END
+WHERE location_id > 0;
+
+SELECT COUNT(*) AS missing_location_distances
+FROM Location
+WHERE distance_from_home_miles IS NULL;
+
+ALTER TABLE Location
+    MODIFY distance_from_home_miles DECIMAL(8,1) NOT NULL,
+    ADD CONSTRAINT chk_location_distance_from_home
+        CHECK (distance_from_home_miles >= 0);
+
+SET SQL_SAFE_UPDATES = @old_safe_updates;
+
+
+-- =========================================================
+-- 6. NEW ACCOMMODATION
 -- =========================================================
 
 INSERT INTO Accommodation (
@@ -276,7 +245,7 @@ VALUES
 
 
 -- =========================================================
--- 8. LOOKUP VARIABLES
+-- 7. LOOKUP VARIABLES
 -- =========================================================
 
 SET @single_afternoon = (
@@ -294,11 +263,6 @@ SET @weekend = (
 SET @fourth = (
     SELECT holiday_id FROM Holiday
     WHERE holiday_name = 'Fourth of July'
-);
-
-SET @beach_holiday = (
-    SELECT holiday_id FROM Holiday
-    WHERE holiday_name = 'Beach Holiday'
 );
 
 SET @thanksgiving = (
@@ -328,7 +292,7 @@ SET @other = (
 
 
 -- =========================================================
--- 9. NEW OUTINGS
+-- 8. NEW OUTINGS
 -- =========================================================
 
 INSERT INTO Outing (
@@ -353,11 +317,11 @@ VALUES
 (
     'Beach Holiday',
     @single_afternoon,
-    (SELECT location_id FROM Location WHERE location_name = 'Jones Beach State Park'),
-    @beach_holiday,
+    (SELECT location_id FROM Location WHERE location_name = 'Grafton Lakes State Park'),
+    NULL,
     '2027-06-19',
     '2027-06-19',
-    'Single-day summer beach outing'
+    'Single-afternoon beach outing at a nearby state park'
 ),
 (
     'Boston Thanksgiving Weekend',
@@ -419,7 +383,7 @@ SET @memorial_overnight = (
 
 
 -- =========================================================
--- 10. PARTICIPANTS AND PREFERENCES
+-- 9. PARTICIPANTS AND PREFERENCES
 -- =========================================================
 
 INSERT INTO OutingParticipant (
@@ -443,8 +407,8 @@ WHERE o.outing_id IN (
     @memorial_overnight
 );
 
--- Taylor is the sample-data mother. Mark several preferences so the
--- shortest-preferred-outing query has a meaningful choice to make.
+-- Mark multiple mother preferences, including a tied one-day minimum,
+-- so the final query must correctly return every shortest tie.
 UPDATE OutingParticipant op
 JOIN FamilyMember fm
     ON fm.member_id = op.member_id
@@ -454,13 +418,14 @@ SET op.is_preferred = TRUE
 WHERE fm.relationship_to_household = 'Mother'
   AND o.outing_name IN (
       'Fall Pumpkin Picking',
+      'Halloween Adventure Day',
       'Boston Holiday Weekend',
       'Chicago Christmas Week'
   );
 
 
 -- =========================================================
--- 11. ACTIVITIES FOR NEW OUTINGS
+-- 10. ACTIVITIES FOR NEW OUTINGS
 -- =========================================================
 
 INSERT INTO OutingActivity (
@@ -474,7 +439,7 @@ INSERT INTO OutingActivity (
     notes
 )
 VALUES
--- Fourth of July: one activity each day
+-- Fourth of July
 (
     @miami_fourth, '2027-07-03', 1,
     (SELECT activity_id FROM Activity WHERE activity_name = 'Sightseeing'),
@@ -494,18 +459,18 @@ VALUES
     '09:00:00', 90, 'Final morning before departure'
 ),
 
--- Single-day Beach Holiday
+-- Nearby Single Afternoon Beach Holiday
 (
     @beach, '2027-06-19', 1,
     (SELECT activity_id FROM Activity WHERE activity_name = 'Swimming'),
-    (SELECT location_id FROM Location WHERE location_name = 'Jones Beach State Park'),
+    (SELECT location_id FROM Location WHERE location_name = 'Grafton Lakes State Park'),
     '11:00:00', 120, 'Primary beach activity'
 ),
 (
     @beach, '2027-06-19', 2,
     (SELECT activity_id FROM Activity WHERE activity_name = 'Sightseeing'),
-    (SELECT location_id FROM Location WHERE location_name = 'Jones Beach State Park'),
-    '14:00:00', 90, 'Boardwalk and shoreline sightseeing'
+    (SELECT location_id FROM Location WHERE location_name = 'Grafton Lakes State Park'),
+    '13:15:00', 60, 'Lake and park sightseeing'
 ),
 
 -- Boston Thanksgiving
@@ -564,7 +529,7 @@ VALUES
 
 
 -- =========================================================
--- 12. TRAVEL FOR NEW OUTINGS
+-- 11. TRAVEL FOR NEW OUTINGS
 -- =========================================================
 
 INSERT INTO TravelLeg (
@@ -575,8 +540,7 @@ INSERT INTO TravelLeg (
     to_location_id,
     departure_datetime,
     planned_duration_minutes,
-    estimated_cost_total_usd,
-    estimated_distance_miles
+    estimated_cost_total_usd
 )
 VALUES
 -- Miami Fourth of July
@@ -584,51 +548,51 @@ VALUES
     @miami_fourth, 1, @car,
     (SELECT location_id FROM Location WHERE location_name = 'Hart Home'),
     (SELECT location_id FROM Location WHERE location_name = 'Albany International Airport'),
-    '2027-07-03 06:30:00', 25, 6.00, 10.0
+    '2027-07-03 06:30:00', 25, 6.00
 ),
 (
     @miami_fourth, 2, @plane,
     (SELECT location_id FROM Location WHERE location_name = 'Albany International Airport'),
     (SELECT location_id FROM Location WHERE location_name = 'Miami International Airport'),
-    '2027-07-03 09:00:00', 195, 1400.00, 1220.0
+    '2027-07-03 09:00:00', 195, 1400.00
 ),
 (
     @miami_fourth, 3, @other,
     (SELECT location_id FROM Location WHERE location_name = 'Miami International Airport'),
     (SELECT location_id FROM Location WHERE location_name = 'Miami Beach'),
-    '2027-07-03 13:00:00', 35, 45.00, 12.0
+    '2027-07-03 13:00:00', 35, 45.00
 ),
 (
     @miami_fourth, 4, @other,
     (SELECT location_id FROM Location WHERE location_name = 'Miami Beach'),
     (SELECT location_id FROM Location WHERE location_name = 'Miami International Airport'),
-    '2027-07-05 12:00:00', 35, 45.00, 12.0
+    '2027-07-05 12:00:00', 35, 45.00
 ),
 (
     @miami_fourth, 5, @plane,
     (SELECT location_id FROM Location WHERE location_name = 'Miami International Airport'),
     (SELECT location_id FROM Location WHERE location_name = 'Albany International Airport'),
-    '2027-07-05 15:00:00', 195, 1400.00, 1220.0
+    '2027-07-05 15:00:00', 195, 1400.00
 ),
 (
     @miami_fourth, 6, @car,
     (SELECT location_id FROM Location WHERE location_name = 'Albany International Airport'),
     (SELECT location_id FROM Location WHERE location_name = 'Hart Home'),
-    '2027-07-05 19:00:00', 25, 6.00, 10.0
+    '2027-07-05 19:00:00', 25, 6.00
 ),
 
--- Beach Holiday
+-- Nearby Beach Holiday
 (
     @beach, 1, @car,
     (SELECT location_id FROM Location WHERE location_name = 'Hart Home'),
-    (SELECT location_id FROM Location WHERE location_name = 'Jones Beach State Park'),
-    '2027-06-19 07:00:00', 180, 45.00, 165.0
+    (SELECT location_id FROM Location WHERE location_name = 'Grafton Lakes State Park'),
+    '2027-06-19 10:00:00', 35, 8.00
 ),
 (
     @beach, 2, @car,
-    (SELECT location_id FROM Location WHERE location_name = 'Jones Beach State Park'),
+    (SELECT location_id FROM Location WHERE location_name = 'Grafton Lakes State Park'),
     (SELECT location_id FROM Location WHERE location_name = 'Hart Home'),
-    '2027-06-19 17:00:00', 180, 45.00, 165.0
+    '2027-06-19 15:30:00', 35, 8.00
 ),
 
 -- Boston Thanksgiving
@@ -636,13 +600,13 @@ VALUES
     @thanksgiving_boston, 1, @car,
     (SELECT location_id FROM Location WHERE location_name = 'Hart Home'),
     (SELECT location_id FROM Location WHERE location_name = 'Downtown Boston'),
-    '2027-11-25 08:00:00', 180, 55.00, 170.0
+    '2027-11-25 08:00:00', 180, 55.00
 ),
 (
     @thanksgiving_boston, 2, @car,
     (SELECT location_id FROM Location WHERE location_name = 'Downtown Boston'),
     (SELECT location_id FROM Location WHERE location_name = 'Hart Home'),
-    '2027-11-27 14:00:00', 180, 55.00, 170.0
+    '2027-11-27 14:00:00', 180, 55.00
 ),
 
 -- Mountain Thanksgiving
@@ -650,13 +614,13 @@ VALUES
     @thanksgiving_mountain, 1, @car,
     (SELECT location_id FROM Location WHERE location_name = 'Hart Home'),
     (SELECT location_id FROM Location WHERE location_name = 'White Pine Mountain Resort'),
-    '2027-11-25 08:00:00', 150, 35.00, 130.0
+    '2027-11-25 08:00:00', 150, 35.00
 ),
 (
     @thanksgiving_mountain, 2, @car,
     (SELECT location_id FROM Location WHERE location_name = 'White Pine Mountain Resort'),
     (SELECT location_id FROM Location WHERE location_name = 'Hart Home'),
-    '2027-11-27 14:00:00', 150, 35.00, 130.0
+    '2027-11-27 14:00:00', 150, 35.00
 ),
 
 -- Memorial Day overnight
@@ -664,18 +628,18 @@ VALUES
     @memorial_overnight, 1, @car,
     (SELECT location_id FROM Location WHERE location_name = 'Hart Home'),
     (SELECT location_id FROM Location WHERE location_name = 'Lake Placid Village'),
-    '2027-05-30 09:00:00', 165, 40.00, 140.0
+    '2027-05-30 09:00:00', 165, 40.00
 ),
 (
     @memorial_overnight, 2, @car,
     (SELECT location_id FROM Location WHERE location_name = 'Lake Placid Village'),
     (SELECT location_id FROM Location WHERE location_name = 'Hart Home'),
-    '2027-05-31 14:00:00', 165, 40.00, 140.0
+    '2027-05-31 14:00:00', 165, 40.00
 );
 
 
 -- =========================================================
--- 13. ACCOMMODATION FOR NEW OVERNIGHT OUTINGS
+-- 12. ACCOMMODATION FOR NEW OVERNIGHT OUTINGS
 -- =========================================================
 
 INSERT INTO OutingAccommodation (
@@ -730,7 +694,7 @@ VALUES
 
 
 -- =========================================================
--- 14. PACKING DATA NEEDED BY PROJECT 2
+-- 13. PACKING DATA NEEDED BY PROJECT 2
 -- =========================================================
 
 SET @riley = (
@@ -761,7 +725,7 @@ SET @sunscreen = (
     WHERE item_name = 'Sunscreen'
 );
 
--- Youngest family member now has a reusable Single Afternoon packing list.
+-- Youngest family member reusable Single Afternoon packing.
 INSERT INTO MemberTripPackingItem (
     member_id,
     trip_type_id,
@@ -796,7 +760,7 @@ VALUES
 
 
 -- =========================================================
--- 15. FINAL REVISION CHECKS
+-- 14. FINAL REVISION CHECKS
 -- =========================================================
 
 SELECT COUNT(*) AS self_member_count
@@ -807,19 +771,22 @@ SELECT COUNT(*) AS mother_count
 FROM FamilyMember
 WHERE relationship_to_household = 'Mother';
 
-SELECT COUNT(*) AS missing_distance_count
-FROM TravelLeg
-WHERE estimated_distance_miles IS NULL
-   OR estimated_distance_miles <= 0;
+SELECT COUNT(*) AS missing_location_distance_count
+FROM Location
+WHERE distance_from_home_miles IS NULL
+   OR distance_from_home_miles < 0;
 
 SELECT COUNT(*) AS new_holiday_count
 FROM Holiday
 WHERE holiday_name IN (
     'Fourth of July',
-    'Beach Holiday',
     'Thanksgiving',
     'Memorial Day'
 );
+
+SELECT COUNT(*) AS beach_holiday_lookup_rows
+FROM Holiday
+WHERE holiday_name = 'Beach Holiday';
 
 SELECT COUNT(*) AS new_outing_count
 FROM Outing

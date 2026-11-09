@@ -1,23 +1,19 @@
-# CSC6302 Programming Project 2 — Requirements Matrix
+# CSC6302 Programming Project 2 — Requirements Matrix (Final Hardening)
 
-| # | Requirement | Existing Support | Revision / Query Plan |
-|---|---|---|---|
-| 1 | Overnight Christmas possibilities | Holiday, Outing, Location | Filter Christmas outings where `end_date > start_date`. |
-| 2 | Count Halloween outings | Holiday, Outing | `COUNT(*)` after joining Halloween. |
-| 3 | Fourth of July trips reachable by plane | TravelMode/TravelLeg available, data missing | Add Fourth of July + Miami outing with Plane legs. |
-| 4 | Youngest member's afternoon apple-orchard packing | Reusable packing model exists; youngest lacks Single Afternoon data | Add Riley Single Afternoon items and Apple Picking requirements; find youngest with `MAX(birth_date)`. |
-| 5 | Upcoming single-day Beach Holiday activities | Activity scheduling exists; data missing | Add Beach Holiday, Jones Beach outing, and two activities. |
-| 6 | Furthest holiday outing | Travel legs exist; distance missing | Add `estimated_distance_miles` to TravelLeg and sum by outing. |
-| 7 | Shortest outing preferred by mother | Participation exists; mother/preference not explicit | Add `is_preferred`; represent Taylor as Mother; order preferred outings by duration. |
-| 8 | Activities sensible October through February | Activity exists; season missing | Add `season_start_month` and `season_end_month`; NULL/NULL means year-round. |
-| 9 | Average Thanksgiving trip price | Travel and lodging cost already modeled; Thanksgiving data missing | Add two Thanksgiving outings and average travel + lodging totals. |
-| 10 | Personal packing for overnight Memorial Day | Packing model exists; "self" and Memorial Day data missing | Add `is_self`, Memorial Day overnight outing, then union trip, travel, and activity packing. |
-| VG1 | Games on first console | Professor VideoGameSystems schema | Query `Game` for Play Station 2. |
-| VG2 | Update four NumPlayers values | `Game.NumPlayers` exists | Update four Animal Crossing titles to 4. |
-| VG3 | Games on consoles released before 2000 | Game → Console | Join and filter `Console.ReleaseDate`. |
-| VG4 | Count games on all PlayStation consoles | `Game.ConsoleName` | `LIKE 'Play Station%'` + `COUNT(*)`. |
-| VG5 | Online games with console and series | Game + Series | LEFT JOIN Series and filter `IsOnline = TRUE`. |
-
-## Design rule
-
-Project 2 revisions are intentionally limited to information required by the new queries. Existing Module 2 tables and constraints remain the foundation of the database.
+| # | Requirement | Final implementation |
+|---|---|
+| 1 | Overnight Christmas possibilities | Holiday + Outing + Location; filters overnight Christmas outings. |
+| 2 | Count Halloween outings | Uses the unit's Cartesian-product `FROM` form with the relationship predicate in `WHERE`. |
+| 3 | Fourth of July trips reachable by plane | Fourth of July outing + Plane travel legs; second Cartesian-product example. |
+| 4 | Youngest member's apple-orchard afternoon packing | Combines Single Afternoon, Car, and Apple Picking rules; returns quantity and bag/requirement; uses `CONCAT`. |
+| 5 | Upcoming single-day Beach Holiday activities | Beach Holiday is an outing name with `holiday_id = NULL`; nearby Grafton Lakes data keeps Single Afternoon realistic. |
+| 6 | Furthest outing | One-way `distance_from_home_miles` stored once on Location; no return-trip double count and no Holiday join. |
+| 7 | Mother's shortest preferred outing | `MIN()` subquery returns all tied shortest preferred outings. |
+| 8 | Oct-Feb sensible activities | Explicitly documents that any seasonal overlap with Oct-Feb qualifies; wraparound seasons supported. |
+| 9 | Average Thanksgiving price | Average of per-outing travel + lodging totals. |
+| 10 | Personal Memorial Day packing | Returns quantity and bag/requirement from trip, travel, and activity rules. |
+| VG1 | Games on first console | Play Station 2. |
+| VG2 | Update four NumPlayers values | Names games for readability while key-based outer predicate remains Safe-Updates compatible. |
+| VG3 | Games on consoles released before 2000 | Game → Console join, filter Console.ReleaseDate. |
+| VG4 | Count games on PlayStation consoles | Uses supplied Console names beginning `Play Station`, including Portable. |
+| VG5 | Online games with console and series | LEFT JOIN Series; `IsOnline = TRUE`. |
